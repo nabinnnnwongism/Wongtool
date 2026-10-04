@@ -16,6 +16,22 @@
 
 ---
 
+## 🎬 Visual Walkthrough & Video Demos
+
+### 1. Ingestion Showcase: Adding a Game Live
+Demonstrates real-time Steam catalog querying, App ID injection, and instant Bento grid card rendering without restarting Steam.
+
+https://github.com/nabinnnnwongism/Wongtool/raw/main/illustration/Adding%20Game.mp4
+
+---
+
+### 2. Bypass & Scene Fix Injection (Showcase Demo: PRAGMATA)
+Demonstrates automated local game directory detection, high-resolution visual asset pulling, and one-click community bypass patch injection.
+
+https://github.com/nabinnnnwongism/Wongtool/raw/main/illustration/Bypassing%20example.mp4
+
+---
+
 ## ⚡ Core Engine Capabilities
 
 ### 1. Live SteamTool Integration
