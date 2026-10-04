@@ -1,0 +1,755 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#070707" />
+    <title>Wong — The Ultimate Game Launcher</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:opsz,wght@6..96,400;6..96,600;6..96,700&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&family=Syne:wght@500;600;700;800&display=swap" rel="stylesheet" />
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+  <body>
+    <script>if (window.api) document.body.classList.add('is-electron');</script>
+    <!-- Electron frameless titlebar -->
+    <div class="titlebar" id="titlebar">
+      <div class="titlebar-drag"></div>
+      <div class="titlebar-btns">
+        <button id="tb-min" title="Minimize" aria-label="Minimize" onclick="titlebarAction('minimize')"><svg class="window-control-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 12h12"/></svg></button>
+        <button id="tb-max" title="Maximize or restore" aria-label="Maximize or restore" onclick="titlebarAction('maximize')"><svg class="window-control-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="6.5" y="6.5" width="11" height="11" rx="1.7"/></svg></button>
+        <button id="tb-close" title="Close" aria-label="Close" onclick="titlebarAction('close')"><svg class="window-control-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m8 8 8 8M16 8l-8 8"/></svg></button>
+      </div>
+    </div>
+    <div class="app" id="app">
+      <!-- Left Rail Sidebar Navigation -->
+      <aside class="sidebar" aria-label="Section navigation">
+        <div class="side-nav">
+          <button data-route="home" title="Home" aria-label="Home">
+            <img class="nav-image" src="Self%20made%20UI%20icons/home.png" alt="" aria-hidden="true" />
+          </button>
+          <button data-route="library" title="Library" aria-label="Library">
+            <img class="nav-image" src="Self%20made%20UI%20icons/library.png" alt="" aria-hidden="true" />
+          </button>
+          <button data-route="steamdb" title="SteamDB Navigator" aria-label="SteamDB Navigator">
+            <svg class="nav-glyph" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="3"/><path d="m14.3 9.8 3.7-2.2M9.7 14.2 6 16.4"/><circle class="solid" cx="18.4" cy="7.4" r="1.8"/><circle class="solid" cx="5.6" cy="16.6" r="1.8"/></svg>
+          </button>
+          <button data-route="providers" title="Providers & Bypass" aria-label="Providers & Bypass">
+            <img class="nav-image" src="Self%20made%20UI%20icons/Bypass.png" alt="" aria-hidden="true" />
+          </button>
+          <button data-route="settings" title="Settings" aria-label="Settings">
+            <img class="nav-image" src="Self%20made%20UI%20icons/setting.png" alt="" aria-hidden="true" />
+          </button>
+        </div>
+        <div class="side-bottom">
+          <div class="bar"></div>
+          <button title="Help" onclick="route('settings')"><i data-lucide="circle-help" size="15"></i></button>
+          <button title="Appearance" onclick="route('settings')"><i data-lucide="palette" size="15"></i></button>
+        </div>
+      </aside>
+
+      <!-- Floating Library Quick Search -->
+      <form class="library-search" id="library-search" role="search">
+        <button type="submit" aria-label="Search library"><i data-lucide="search"></i></button>
+        <input id="library-search-input" type="search" placeholder="SEARCH YOUR LIBRARY" aria-label="Search your library" />
+      </form>
+
+      <!-- HOME PAGE -->
+      <section class="home" aria-label="Powerplay home">
+        <img class="home-image" src="Images/landing%20page%20video/08e1a457-4a55-489a-ace9-def895ecab62.png" alt="" />
+      </section>
+
+      <main>
+        <!-- ════════════════════════════════════════
+             LIBRARY PAGE (WITH STEAMTOOL INTEGRATION)
+             ════════════════════════════════════════ -->
+        <section class="page" id="library">
+          <div class="page-head">
+            <div>
+              <div class="eyebrow"><i></i>Personal Collection</div>
+              <h2>Your <em>library.</em></h2>
+              <p>Inject Steam tickets, paste any Steam App ID, or drag manifests directly below.</p>
+            </div>
+            <span class="count" id="game-count">04 GAMES</span>
+          </div>
+
+          <!-- SteamTool Ingestion Bar Container -->
+          <div class="steamtool-container">
+            <form class="add-game" id="add-form">
+              <input id="game-id" placeholder="PASTE STEAM APP ID (e.g. 1145360) OR GAME NAME" autocomplete="off" />
+              <button type="submit" id="add-button" disabled>
+                <span>Inject & Add</span> <i data-lucide="zap" size="13"></i>
+              </button>
+            </form>
+
+            <div class="steamtool-actions">
+              <div class="steamtool-quick-btns">
+                <button class="btn-steamtool-util" id="restart-steam-btn" type="button" title="Restart Steam to apply manifests immediately">
+                  <i data-lucide="refresh-cw"></i> Restart Steam
+                </button>
+                <button class="btn-steamtool-util" id="open-steamdb-btn" type="button" title="Open SteamDB Catalog Explorer">
+                  <i data-lucide="compass"></i> Explore Catalog
+                </button>
+              </div>
+              <div class="steamtool-drop-hint">
+                <i data-lucide="layers" size="13"></i> Auto-installs Lua scripts & depotcache manifests
+              </div>
+            </div>
+
+            <!-- Drag and Drop Manifests Area -->
+            <div class="steamtool-dropzone" id="steamtool-dropzone">
+              <i data-lucide="upload-cloud" size="16"></i>
+              <span>Drop <strong>.lua</strong>, <strong>.manifest</strong>, or <strong>.zip</strong> here to inject into Steam</span>
+            </div>
+          </div>
+
+          <!-- Featured Game -->
+          <article class="card library-feature" id="latest-game" data-game-id="latest">
+            <div class="card-info">
+              <div>
+                <small>Latest added</small>
+                <h3>Loading…</h3>
+              </div>
+              <span class="card-arrow"><i data-lucide="arrow-up-right" size="14"></i></span>
+            </div>
+          </article>
+
+          <!-- Library Grid -->
+          <div class="library-grid" id="library-grid"></div>
+        </section>
+
+        <!-- ════════════════════════════════════════
+             STEAMDB EXPLORER PAGE
+             ════════════════════════════════════════ -->
+        <section class="page steamdb-page" id="steamdb">
+          <div class="page-head">
+            <div>
+              <div class="eyebrow"><i></i>Global Index</div>
+              <h2>Every game.<br>One clear record.</h2>
+              <p>Search the public Steam catalog, inspect metadata, then inject manifests straight to your local library.</p>
+            </div>
+            <span class="count">LIVE CATALOG</span>
+          </div>
+
+          <form class="steam-search" id="steam-search">
+            <i data-lucide="search" size="17"></i>
+            <input id="steam-query" placeholder="Search every game on Steam (e.g. Elden Ring, Hades)" autocomplete="off" />
+            <kbd>⌘ K</kbd>
+          </form>
+
+          <div class="steam-workspace">
+            <div class="steam-results">
+              <div class="steam-results-head">
+                <span>Search results</span>
+                <span id="steam-result-count">00 titles</span>
+              </div>
+              <div class="steam-results-list" id="steam-results-list"></div>
+            </div>
+
+            <article class="steam-inspector" id="steam-inspector">
+              <div class="steam-info">
+                <div class="eyebrow"><i></i><span id="steam-meta">APP / STEAM</span></div>
+                <h3 id="steam-title">Search the catalog</h3>
+                <p id="steam-description">Start typing a title above to pull its public Steam store record, imagery, description, genres, and metadata.</p>
+                <div class="steam-tags" id="steam-tags"><span>Steam catalog</span></div>
+                <button class="steam-add" id="steam-add" type="button" disabled>
+                  <span><i data-lucide="plus" size="15"></i></span> Inject to Library
+                </button>
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <!-- ════════════════════════════════════════
+             PROVIDERS / BYPASS CATALOG PAGE
+             ════════════════════════════════════════ -->
+        <section class="page" id="providers">
+          <div class="page-head">
+            <div>
+              <div class="eyebrow"><i></i>Bypass Universe</div>
+              <h2>Providers.</h2>
+              <p>Explore bypass archives, official publisher cracks, and standalone fixes.</p>
+            </div>
+            <span class="count">06 ARCHIVES</span>
+          </div>
+
+          <div class="provider-intro">
+            <p>Select a provider archive to unlock its signature games, install community bypasses, and access dedicated fixes.</p>
+            <span class="hint">Select an archive ↗</span>
+          </div>
+
+          <div class="provider-grid" id="provider-grid">
+            <button class="provider" data-provider="Electronic Arts" style="--poster:url('Images/Providers/EA.png')">
+              <span class="provider-mark">EA</span>
+              <small data-chapter="Archive 01">Electronic Arts</small>
+            </button>
+            <button class="provider" data-provider="Ubisoft" style="--poster:url('Images/Providers/Ubisoft.png')">
+              <span class="provider-mark">U</span>
+              <small data-chapter="Archive 02">Ubisoft</small>
+            </button>
+            <button class="provider" data-provider="Rockstar" style="--poster:url('Images/Providers/rockstar.png')">
+              <span class="provider-mark">R★</span>
+              <small data-chapter="Archive 03">Rockstar</small>
+            </button>
+            <button class="provider" data-provider="Denuvo" style="--poster:url('Images/Providers/denuvo.png')">
+              <span class="provider-mark">D</span>
+              <small data-chapter="Archive 04">Denuvo</small>
+            </button>
+            <button class="provider" data-provider="PlayStation" style="--poster:url('Images/Providers/Playstation.png')">
+              <span class="provider-mark">PS</span>
+              <small data-chapter="Archive 05">PlayStation</small>
+            </button>
+            <button class="provider" data-provider="Other Games" style="--poster:url('Images/Providers/Other%20games.png')">
+              <span class="provider-mark">∞</span>
+              <small data-chapter="Archive 06">Other Games</small>
+            </button>
+          </div>
+        </section>
+
+        <!-- ════════════════════════════════════════
+             PROVIDER BYPASS GAMES LIST PAGE
+             ════════════════════════════════════════ -->
+        <section class="page" id="provider-games">
+          <div class="crumb">
+            <button data-route="providers">Providers</button>
+            <i data-lucide="chevron-right" size="12"></i>
+            <span id="provider-name">Electronic Arts</span>
+          </div>
+          <div class="page-head">
+            <div>
+              <div class="eyebrow"><i></i><span id="provider-eyebrow">Archive</span></div>
+              <h2 id="provider-title">Electronic Arts.</h2>
+              <p>Choose any game to inspect details, download required software, and apply fixes.</p>
+            </div>
+            <span class="count" id="provider-count">00 GAMES</span>
+          </div>
+
+          <div class="bypass-games-grid" id="provider-game-grid"></div>
+        </section>
+
+        <!-- ════════════════════════════════════════
+             BYPASS GAME DETAIL & FIX INJECTOR PAGE
+             ════════════════════════════════════════ -->
+        <section class="page bd-page" id="bypass-detail">
+          <!-- Top Hero Section with Wide Banner, Logo, and App ID -->
+          <div class="bd-hero-wrapper">
+            <button class="bd-btn-back" id="bd-btn-back" type="button" title="Back to Archive">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M19 12H5M12 5l-7 7 7 7"/>
+              </svg>
+              <span>Back</span>
+            </button>
+
+            <img class="bd-hero-img" id="bd-hero-img" src="" alt="Hero Banner" />
+            <div class="bd-hero-gradient"></div>
+
+            <!-- Overlaid Game Logo -->
+            <div class="bd-logo-container" id="bd-logo-container">
+              <img class="bd-game-logo" id="bd-game-logo" src="" alt="Logo" style="display:none;" />
+            </div>
+
+            <!-- Vertical APP ID Stamp -->
+            <span class="bd-appid-stamp">APP <span id="bd-appid-display">------</span></span>
+
+            <!-- Bottom Left Title & Fix Tag -->
+            <div class="bd-hero-center">
+              <span class="bd-fix-tag" id="bd-fix-tag">Bypass Active</span>
+              <h1 class="bd-game-title" id="bd-game-title">Loading Game…</h1>
+            </div>
+          </div>
+
+          <!-- Launch & Action Row -->
+          <div class="bd-content-container">
+            <div class="bd-launch-row">
+              <div class="bd-launch-badges" id="bd-launch-badges">
+                <span class="bd-badge bd-badge-exe" id="bd-badge-exe">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 3l14 9-14 9V3z"/></svg>
+                  <span>EXE launch</span>
+                </span>
+                <span class="bd-badge bd-badge-steam" id="bd-badge-steam">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/></svg>
+                  <span>Steam launch</span>
+                </span>
+              </div>
+
+              <div class="bd-fix-action-wrapper">
+                <button class="bd-fix-apply-btn" id="bd-apply-btn" type="button" disabled>
+                  <span class="bd-btn-text" id="bd-btn-text">
+                    <i data-lucide="zap" size="14"></i>
+                    <span>Inject</span>
+                  </span>
+                  <div class="bd-progress-bar-fill" id="bd-progress-bar"></div>
+                </button>
+                <span class="bd-progress-percent" id="bd-progress-percent">0%</span>
+              </div>
+            </div>
+
+            <!-- Two-Column Body Layout -->
+            <div class="bd-body-layout">
+              <!-- Left Column: Dev Note, Known Issues -->
+              <div class="bd-col-main">
+                <div class="bd-section-group">
+                  <p class="bd-section-label">Dev Note</p>
+                  <blockquote class="bd-dev-note" id="bd-dev-note">Enjoy the game ♥</blockquote>
+                </div>
+
+                <div class="bd-section-group">
+                  <p class="bd-section-label">Known Issues</p>
+                  <ul class="bd-error-list" id="bd-error-list">
+                    <li class="bd-error-item">
+                      <span class="bd-error-num">01</span>
+                      <p class="bd-error-text">No known issues reported for this title.</p>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+
+              <!-- Right Column: Select Game Folder & Metadata Info -->
+              <div class="bd-col-side">
+                <div class="bd-section-group bd-folder-select-group">
+                  <p class="bd-section-label">Select the game folder:</p>
+                  <div class="bd-folder-actions">
+                    <button type="button" id="bd-detect-btn" class="bd-folder-action-btn bd-btn-detect" title="Search C:\Program Files (x86)\Steam\steamapps\common">
+                      <i data-lucide="search" size="14"></i>
+                      <span>Detect</span>
+                    </button>
+                    <button type="button" id="bd-manual-btn" class="bd-folder-action-btn bd-btn-manual" title="Select root game folder manually">
+                      <i data-lucide="folder-open" size="14"></i>
+                      <span>Manual</span>
+                    </button>
+                  </div>
+                  <div class="bd-folder-result-card" id="bd-folder-result-card">
+                    <div class="bd-folder-status-indicator unselected" id="bd-folder-status-indicator">
+                      <i data-lucide="alert-circle" size="13" id="bd-status-icon"></i>
+                      <span id="bd-status-label">No folder selected</span>
+                    </div>
+                    <div class="bd-folder-path-box" id="bd-folder-path-box">
+                      <span class="bd-folder-path-val" id="bd-folder-path-val">Choose Detect or Manual above</span>
+                    </div>
+                  </div>
+                  <input type="hidden" id="bd-install-path" value="" />
+                  <input type="file" id="bd-file-input-fallback" webkitdirectory directory style="display:none;" />
+                </div>
+
+                <div class="bd-section-group">
+                  <p class="bd-section-label">Fix Information</p>
+                  <div class="bd-meta-card">
+                    <div class="bd-meta-row">
+                      <span class="bd-meta-key">App ID</span>
+                      <span class="bd-meta-val" id="bd-meta-appid">------</span>
+                    </div>
+                    <div class="bd-meta-row">
+                      <span class="bd-meta-key">Launch via EXE</span>
+                      <span class="bd-meta-val ok" id="bd-meta-exe">Yes</span>
+                    </div>
+                    <div class="bd-meta-row">
+                      <span class="bd-meta-key">Launch via Steam</span>
+                      <span class="bd-meta-val ok" id="bd-meta-steam">Yes</span>
+                    </div>
+                    <div class="bd-meta-row">
+                      <span class="bd-meta-key">Fix Name</span>
+                      <span class="bd-meta-val" id="bd-meta-fix">Community Bypass</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ════════════════════════════════════════
+             LIBRARY GAME DETAIL & LAUNCH MODAL
+             ════════════════════════════════════════ -->
+        <section class="page detail" id="game-detail">
+          <div class="detail-bg" id="detail-bg"></div>
+          <div class="detail-content">
+            <div class="eyebrow"><i></i><span id="detail-provider">Personal Collection</span></div>
+            <h2 id="detail-title">Eclipse.</h2>
+            <p id="detail-description">Game record ready for execution through Powerplay.</p>
+            <div style="display:flex;gap:12px;align-items:center;">
+              <button class="folder" id="play-button" style="background:var(--acid);color:#000;">
+                <span><i data-lucide="play" size="15"></i></span> Launch Game
+              </button>
+              <button class="folder" id="folder-button">
+                <span><i data-lucide="folder-open" size="15"></i></span> Open Folder
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <!-- ════════════════════════════════════════
+             SETTINGS (PROJECT LIGHTNING ARCHITECTURE)
+             ════════════════════════════════════════ -->
+        <section class="page" id="settings">
+          <div class="page-head">
+            <div>
+              <div class="eyebrow"><i></i>Configuration Engine</div>
+              <h2>Settings.</h2>
+              <p>Adjust system paths, SteamTool manifests, controller layouts, and download sources.</p>
+            </div>
+            <span class="count">V 1.0.0</span>
+          </div>
+
+          <!-- Settings Category Navigation -->
+          <div class="settings-nav">
+            <button class="settings-tab-btn active" data-tab="settings-general">General</button>
+            <button class="settings-tab-btn" data-tab="settings-steam">Steam & SteamTool</button>
+            <button class="settings-tab-btn" data-tab="settings-library">Library & Downloads</button>
+            <button class="settings-tab-btn" data-tab="settings-wizard">Setup Wizard</button>
+            <button class="settings-tab-btn" data-tab="settings-sources">Sources</button>
+            <button class="settings-tab-btn" data-tab="settings-about">About</button>
+          </div>
+
+          <!-- Panel 1: General Settings -->
+          <div class="settings-panel active" id="settings-general">
+            <div class="settings-grid">
+              <div class="setting-card">
+                <div>
+                  <h3>Interface Language</h3>
+                  <p>Choose the interface language used across dialogs and system notifications.</p>
+                </div>
+                <select class="setting-select" id="settings-language">
+                  <option value="en" selected>English (US)</option>
+                  <option value="es">Español (Castellano)</option>
+                  <option value="de">Deutsch (Deutschland)</option>
+                  <option value="fr">Français (French)</option>
+                  <option value="pt">Português (Brasil)</option>
+                </select>
+              </div>
+
+              <div class="setting-card">
+                <div>
+                  <h3>Controller Iconography</h3>
+                  <p>Select which glyph styling is displayed on controller navigation prompts.</p>
+                </div>
+                <div class="controller-preview-grid">
+                  <label class="controller-opt active">
+                    <input type="radio" name="mando" value="xbox" checked hidden />
+                    <span>Xbox Layout (A/B/X/Y)</span>
+                  </label>
+                  <label class="controller-opt">
+                    <input type="radio" name="mando" value="ps" hidden />
+                    <span>PlayStation (✕/○/□/△)</span>
+                  </label>
+                </div>
+              </div>
+
+              <div class="setting-card">
+                <div>
+                  <h3>Atmosphere & Accent</h3>
+                  <p>Choose the complete light or dark interface atmosphere. Your choice is remembered on this device.</p>
+                </div>
+                <div class="theme-samples" role="group" aria-label="Interface atmosphere">
+                  <button class="atmosphere-theme-btn active" data-atmosphere-theme="light" aria-label="White theme" title="White theme"><i></i><span>White</span></button>
+                  <button class="atmosphere-theme-btn" data-atmosphere-theme="dark" aria-label="Black theme" title="Black theme"><i></i><span>Black</span></button>
+                </div>
+              </div>
+
+              <div class="setting-card full-width custom-background-card">
+                <div>
+                  <h3>Custom Interface Theme</h3>
+                  <p>Place an image or animated GIF behind the library, providers, and settings canvas. It is shown at low opacity so text and controls remain clear.</p>
+                </div>
+                <div class="custom-background-controls">
+                  <div class="custom-background-preview" id="custom-background-preview" aria-hidden="true"><span>White interface background</span></div>
+                  <div class="custom-background-actions">
+                    <input id="custom-background-input" type="file" accept="image/png,image/jpeg,image/webp,image/gif,.png,.jpg,.jpeg,.webp,.gif" hidden />
+                    <button type="button" class="btn-steamtool-util" id="custom-background-upload-btn"><i data-lucide="image-plus" size="14"></i> Choose image or GIF</button>
+                    <button type="button" class="btn-steamtool-util" id="custom-background-reset-btn" disabled><i data-lucide="rotate-ccw" size="14"></i> Restore default</button>
+                    <span class="custom-background-status" id="custom-background-status" role="status">Using the default background</span>
+                  </div>
+                </div>
+                <div class="custom-theme-controls" aria-label="Custom theme appearance">
+                  <label class="custom-theme-opacity" for="custom-theme-opacity"><span>Theme opacity</span><input id="custom-theme-opacity" type="range" min="0" max="60" value="14" step="1" /><output id="custom-theme-opacity-value" for="custom-theme-opacity">14%</output></label>
+                  <div class="custom-theme-mode" role="group" aria-label="Theme overlay treatment">
+                    <button type="button" class="custom-theme-mode-btn active" data-theme-mode="white">White wash</button>
+                    <button type="button" class="custom-theme-mode-btn" data-theme-mode="tint">Color wash</button>
+                    <button type="button" class="custom-theme-mode-btn" data-theme-mode="none">No color wash</button>
+                    <label class="custom-theme-color" for="custom-theme-color" title="Choose the color wash"><span>Tint</span><input id="custom-theme-color" type="color" value="#a8c9ed" disabled /></label>
+                  </div>
+                </div>
+              </div>
+
+              <div class="setting-card">
+                <div>
+                  <h3>Cinematic Motion</h3>
+                  <p>Toggle high-fluidity animations and hover movements.</p>
+                </div>
+                <div class="switchline">
+                  <span>Full Motion</span>
+                  <button class="switch" aria-label="Full Motion"><i></i></button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Panel 2: Steam & SteamTool Settings -->
+          <div class="settings-panel" id="settings-steam">
+            <div class="settings-grid">
+              <div class="setting-card full-width">
+                <div>
+                  <h3>Steam Installation Directory</h3>
+                  <p>Absolute directory where Steam is installed on your computer. Manifests, depotcaches, and Lua scripts will be injected here.</p>
+                </div>
+                <div class="setting-input-row">
+                  <input id="settings-steam-path" placeholder="C:\Program Files (x86)\Steam" />
+                  <button type="button" id="detect-steam-btn">Auto-Detect</button>
+                  <button type="button" id="browse-steam-btn">Browse</button>
+                  <button type="button" class="primary" id="save-settings-btn">Save</button>
+                </div>
+              </div>
+
+              <div class="setting-card">
+                <div>
+                  <h3>SteamTool Manifest Injection</h3>
+                  <p>When enabled, depotcache manifests are automatically written to Steam depots alongside Lua license tickets.</p>
+                </div>
+                <div class="switchline">
+                  <span>Include .manifest Files</span>
+                  <button class="switch" id="settings-manifest-toggle" aria-label="Toggle manifests"><i></i></button>
+                </div>
+              </div>
+
+              <div class="setting-card">
+                <div>
+                  <h3>Steam Hook Status</h3>
+                  <p>Status of SteamTools hook runtime in your local Steam directory.</p>
+                </div>
+                <div style="display:flex;align-items:center;flex-wrap:wrap;gap:10px;margin-top:10px;">
+                  <span class="eyebrow" id="steamtool-status-badge" style="color:#22c55e;"><i></i>Active & Ready</span>
+                  <button type="button" class="btn-steamtool-util" id="install-steamtool-hook-btn">Install / Repair Hook</button>
+                  <button type="button" class="btn-steamtool-util" id="restart-steam-settings-btn">Restart Steam</button>
+                  <button type="button" class="btn-steamtool-util" id="open-wizard-btn">Rerun Setup Wizard</button>
+                </div>
+              </div>
+
+              <div class="setting-card danger-zone full-width">
+                <div>
+                  <h3>Critical Maintenance: Purge Manifests</h3>
+                  <p>Removes all generated Lua scripts and manifests from your Steam directory. Physical game installs will remain untouched.</p>
+                </div>
+                <div>
+                  <button class="modal-btn danger" id="clear-manifests-btn">Purge Injected Steam Manifests</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Panel 3: Library & Downloads -->
+          <div class="settings-panel" id="settings-library">
+            <div class="settings-grid">
+              <div class="setting-card full-width">
+                <div>
+                  <h3>Default Game Installation Directory</h3>
+                  <p>Where downloaded games and bypass fixes will be stored locally.</p>
+                </div>
+                <div class="setting-input-row">
+                  <input id="settings-download-path" placeholder="C:\Powerplay Games" />
+                  <button type="button">Browse Folder</button>
+                  <button type="button" class="primary" onclick="showToast('Download path saved.')">Save</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+
+          <!-- Panel 4: Setup Wizard & Testing -->
+          <div class="settings-panel" id="settings-wizard">
+            <div class="settings-grid">
+              <div class="setting-card full-width">
+                <div>
+                  <h3>Interactive Setup Wizard</h3>
+                  <p>Guided setup for Steam directory auto-detection, runtime hook deployment, and library injection walkthrough. Great for first-time onboarding or testing changes.</p>
+                </div>
+                <div style="display:flex;align-items:center;flex-wrap:wrap;gap:12px;margin-top:16px;">
+                  <button type="button" class="btn-steamtool-util" id="launch-wizard-full-btn" style="padding:10px 20px;font-size:12px;background:#f2f1ed;color:#080808;border-color:#fff;">
+                    <i data-lucide="play" size="14"></i> Launch Setup Wizard
+                  </button>
+                  <button type="button" class="btn-steamtool-util" id="reset-wizard-state-btn" style="padding:10px 18px;font-size:12px;">
+                    <i data-lucide="rotate-ccw" size="14"></i> Reset First-Launch State
+                  </button>
+                </div>
+              </div>
+
+              <div class="setting-card full-width">
+                <div>
+                  <h3>Direct Step Inspector</h3>
+                  <p>Jump directly into any step of the wizard to preview or test without starting from step 1.</p>
+                </div>
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-top:14px;">
+                  <button type="button" class="btn-steamtool-util test-step-btn" data-step="1" style="justify-content:center;padding:12px;">
+                    Step 1: Introduction
+                  </button>
+                  <button type="button" class="btn-steamtool-util test-step-btn" data-step="2" style="justify-content:center;padding:12px;">
+                    Step 2: Steam Path Check
+                  </button>
+                  <button type="button" class="btn-steamtool-util test-step-btn" data-step="3" style="justify-content:center;padding:12px;">
+                    Step 3: Install Steam Hook
+                  </button>
+                  <button type="button" class="btn-steamtool-util test-step-btn" data-step="4" style="justify-content:center;padding:12px;">
+                    Step 4: Quick Guide
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Panel 5: Sources -->
+          <div class="settings-panel" id="settings-sources">
+            <div class="settings-grid">
+              <div class="setting-card full-width">
+                <div>
+                  <h3>Indexed Download Sources</h3>
+                  <p>External repositories and mirrors indexed for game metadata, art, and patches.</p>
+                </div>
+                <div style="display:flex;gap:10px;margin-top:10px;">
+                  <button class="modal-btn" onclick="showToast('Sources refreshed.')">Refresh Sources</button>
+                  <button class="modal-btn primary" onclick="window.open('https://project-lightning-web.vercel.app/','_blank')">Open Nexus Web</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Panel 6: About Powerplay -->
+          <div class="settings-panel" id="settings-about">
+            <div class="settings-grid">
+              <div class="setting-card full-width">
+                <div>
+                  <h3>Powerplay V 1.0.0</h3>
+                  <p>High-performance game launcher, SteamTool manifest injector, and bypass hub built with precision.</p>
+                </div>
+                <div class="eyebrow" style="margin-top:14px;"><i></i>All services operational</div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <!-- Onboarding Wizard Overlay -->
+      <div class="onboarding-overlay" id="onboarding-overlay">
+        <div class="onboarding-card">
+          <div class="onboarding-header">
+            <div class="onboarding-steps">
+              <div class="onboarding-step-dot active" data-ob-dot="1"></div>
+              <div class="onboarding-step-dot" data-ob-dot="2"></div>
+              <div class="onboarding-step-dot" data-ob-dot="3"></div>
+              <div class="onboarding-step-dot" data-ob-dot="4"></div>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;">
+              <div class="onboarding-badge">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                Quick Setup
+              </div>
+              <button type="button" class="ob-close" id="ob-close-btn" title="Close Setup Wizard" aria-label="Close">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+              </button>
+            </div>
+          </div>
+
+          <!-- Step 1: Welcome -->
+          <div class="onboarding-step-content active" id="ob-step-1">
+            <div class="ob-icon-wrap">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>
+            </div>
+            <h2>Before you start.</h2>
+            <p class="ob-desc">Wong needs to link with your Steam installation to inject game licenses. This takes about 30 seconds. You can skip now and finish later in <strong>Settings</strong> &mdash; but games won&apos;t appear in Steam until it&apos;s done.</p>
+            <div class="ob-actions">
+              <button type="button" class="ob-btn secondary" id="ob-skip-btn">Skip for Now</button>
+              <button type="button" class="ob-btn primary" id="ob-next-1-btn">Let&apos;s Go <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg></button>
+            </div>
+          </div>
+
+          <!-- Step 2: Steam Path -->
+          <div class="onboarding-step-content" id="ob-step-2">
+            <div class="ob-icon-wrap">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+            </div>
+            <h2>Steam Folder</h2>
+            <p class="ob-desc">Is this where Steam is installed on your PC? Wong detected this path automatically.</p>
+            <div class="ob-input-box">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+              <input id="ob-steam-path-input" placeholder="C:\Program Files (x86)\Steam" />
+            </div>
+            <div class="ob-actions">
+              <button type="button" class="ob-btn secondary" id="ob-back-2-btn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg> Back</button>
+              <button type="button" class="ob-btn secondary" id="ob-no-path-btn">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+                No, Let Me Choose
+              </button>
+              <button type="button" class="ob-btn primary" id="ob-yes-path-btn">Yes, That&apos;s It <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg></button>
+            </div>
+          </div>
+
+          <!-- Step 3: Install Hook -->
+          <div class="onboarding-step-content" id="ob-step-3">
+            <div class="ob-icon-wrap">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            </div>
+            <h2>Install the Steam Hook</h2>
+            <p class="ob-desc">This places a small runtime file (<code>dwmapi.dll</code>) in your Steam folder &mdash; it&apos;s what allows Steam to recognize injected game licenses.</p>
+            <div class="ob-notice-box">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:2px"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              <p><strong>Required for Wong to work.</strong> If you skip now and click &ldquo;Inject&rdquo; on a game later, Wong installs this automatically in the background. You can remove or reinstall it anytime from <strong>Settings &rarr; Steam &amp; SteamTool</strong>.</p>
+            </div>
+            <div class="ob-actions">
+              <button type="button" class="ob-btn secondary" id="ob-back-3-btn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg> Back</button>
+              <button type="button" class="ob-btn danger" id="ob-reject-hook-btn">Skip for Now</button>
+              <button type="button" class="ob-btn primary" id="ob-install-hook-btn">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                Install Hook
+              </button>
+            </div>
+          </div>
+
+          <!-- Step 4: All Done -->
+          <div class="onboarding-step-content" id="ob-step-4">
+            <div class="ob-icon-wrap ob-icon-success">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+            </div>
+            <h2>You&apos;re all set.</h2>
+            <p class="ob-desc">Here&apos;s how to add your first game in under a minute:</p>
+            <div class="ob-guide-list">
+              <div class="ob-guide-item">
+                <div class="ob-guide-num">1</div>
+                <div class="ob-guide-text">
+                  <h4>Open Library</h4>
+                  <p>Tap Library in the sidebar &mdash; you&apos;ll see the injection bar at the top.</p>
+                </div>
+              </div>
+              <div class="ob-guide-item">
+                <div class="ob-guide-num">2</div>
+                <div class="ob-guide-text">
+                  <h4>Paste a Game ID or Title</h4>
+                  <p>Enter a Steam App ID (e.g. 1091500 for Cyberpunk 2077) or just type the name.</p>
+                </div>
+              </div>
+              <div class="ob-guide-item">
+                <div class="ob-guide-num">3</div>
+                <div class="ob-guide-text">
+                  <h4>Hit &ldquo;Inject &amp; Add&rdquo;</h4>
+                  <p>The game instantly appears in Steam, ready to download and play.</p>
+                </div>
+              </div>
+            </div>
+            <div class="ob-actions">
+              <button type="button" class="ob-btn primary" id="ob-finish-btn" style="width:100%;justify-content:center">
+                Open Wong <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+      </div>
+
+      <!-- Toast Notification Bar -->
+      <div class="toast" id="toast">
+        <i data-lucide="check" size="14"></i>
+        <span id="toast-text">Action completed successfully.</span>
+      </div>
+    </div>
+
+    <!-- Application Script -->
+    <script type="module" src="js/app.js"></script>
+  </body>
+</html>

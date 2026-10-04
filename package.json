@@ -1,0 +1,29 @@
+{
+  "name": "wong-desktop",
+  "productName": "Wong",
+  "version": "1.0.0",
+  "description": "Wong — The Ultimate Game Launcher & Library (Showcase Edition)",
+  "main": "electron-main.js",
+  "scripts": {
+    "start": "electron .",
+    "dev": "node server.js",
+    "electron": "electron .",
+    "electron:dev": "set WONG_DEV=1 && electron ."
+  },
+  "dependencies": {
+    "better-sqlite3": "^12.6.2"
+  },
+  "devDependencies": {
+    "electron": "^36.4.0"
+  },
+  "keywords": [
+    "electron",
+    "game-launcher",
+    "steam-library",
+    "bento-grid",
+    "desktop-app",
+    "ui-design"
+  ],
+  "author": "Wong",
+  "license": "MIT"
+}

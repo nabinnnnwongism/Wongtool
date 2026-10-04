@@ -1,0 +1,24 @@
+# Dependencies
+node_modules/
+
+# Build and distribution
+dist/
+build/
+out/
+
+# Local SQLite databases and caches
+*.db
+*.db-journal
+*.log
+npm-debug.log*
+
+# Operating System files
+.DS_Store
+Thumbs.db
+ehthumbs.db
+
+# Environment variables & IDE settings
+.env
+.env.local
+.vscode/
+.idea/
