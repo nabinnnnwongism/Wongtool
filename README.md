@@ -195,6 +195,233 @@ The installer:
 
 ---
 
+## The games that have bypasses inbuilt from the app
+
+Wong includes integrated bypass definitions and auto-detection for titles protected by third-party DRM (Denuvo, Ubisoft Connect, EA app, Rockstar Games Launcher, etc.). Below is the complete catalog of supported games grouped by category:
+
+<details open>
+<summary><b>UBISOFT (41 Games)</b></summary>
+
+| App ID | Game Title |
+| :--- | :--- |
+| `33230` | Assassin's Creed II |
+| `33440` | Driver San Francisco |
+| `48190` | Assassin's Creed Brotherhood |
+| `201870` | Assassins Creed Revelations |
+| `208480` | Assassin's Creed III |
+| `220240` | Far Cry 3 |
+| `233270` | Far Cry® 3 Blood Dragon |
+| `235600` | Tom Clancy's Splinter Cell Blacklist |
+| `241560` | The Crew |
+| `242050` | Assassin's Creed IV Black Flag |
+| `242550` | Rayman Legends |
+| `243470` | Watch_Dogs |
+| `289650` | Assassins Creed Unity |
+| `298110` | Far Cry 4 |
+| `311560` | Assassin's Creed Rogue |
+| `354380` | Assassins Creed Chronicles China |
+| `359610` | Assassin's Creed Chronicles India |
+| `368500` | Assassin's Creed Syndicate |
+| `371660` | Far Cry Primal |
+| `446560` | Just Dance 2017 |
+| `447040` | Watch_Dogs 2 |
+| `460920` | Steep |
+| `460930` | Tom Clancy's Ghost Recon Wildlands |
+| `488790` | South Park The Fractured But Whole |
+| `552520` | Far Cry 5 |
+| `582160` | Assassins Creed Origins |
+| `646910` | The Crew 2 |
+| `812140` | Assassins Creed Odyssey |
+| `911400` | Assassins Creed III Remastered |
+| `916440` | Anno 1800 |
+| `939960` | Far Cry New Dawn |
+| `2208920` | Assassin's Creed Valhalla |
+| `2239550` | Watch Dogs: Legion |
+| `2290180` | Riders Republic |
+| `2698940` | The Crew Motorfest |
+| `2751000` | Prince of Persia The Lost Crown |
+| `2840770` | Avatar: Frontiers of Pandora |
+| `2842040` | Star Wars Outlaws |
+| `3035570` | Assassin's Creed Mirage |
+| `3159330` | Assassin's Creed Shadows |
+| `3751950` | Assassin's Creed Black Flag Resynced |
+
+</details>
+
+<details open>
+<summary><b>EA (37 Games)</b></summary>
+
+| App ID | Game Title |
+| :--- | :--- |
+| `17410` | Mirror's Edge |
+| `47870` | Need for Speed Hot Pursuit |
+| `1134570` | F1 2021 |
+| `1172380` | STAR WARS Jedi La Orden caída |
+| `1222670` | The Sims 4 |
+| `1222680` | Need for Speed Heat |
+| `1222700` | A Way Out |
+| `1225560` | Unravel |
+| `1225570` | Unravel 2 |
+| `1233570` | Mirror's Edge Catalyst |
+| `1237950` | STAR WARS Battlefront II |
+| `1238820` | Battlefield 3 |
+| `1238840` | Battlefield 1 |
+| `1238860` | Battlefield 4 |
+| `1238880` | Battlefield™ Hardline |
+| `1262560` | Need for Speed Most Wanted |
+| `1262580` | Need for Speed Payback |
+| `1262600` | Need For Speed Rivals |
+| `1313860` | EA SPORTS FIFA 21 |
+| `1328660` | Need for Speed Hot Pursuit Remastered |
+| `1426210` | It Takes Two |
+| `1506830` | FIFA 22 |
+| `1692250` | F1 2022 |
+| `1693980` | Dead Space |
+| `1774580` | STAR WARS Jedi La Orden caída |
+| `1811260` | FIFA 23 |
+| `1846380` | Need for Speed Unbound |
+| `1938010` | WILD HEARTS |
+| `2001120` | Unravel 2 |
+| `2669320` | EA SPORTS FC 25 |
+| `2807960` | Battlefield 6 |
+| `3059520` | F1 25 |
+| `3405690` | EA SPORTS FC 26 |
+| `3654560` | Plants vs Zombies Replanted |
+| `3940610` | EA SPORTS™ Madden NFL 27 |
+| `4032350` | EA SPORTS™ College Football 27 |
+| `4080220` | EA SPORTS FC™ 27 |
+
+</details>
+
+<details open>
+<summary><b>ROCKSTAR (11 Games)</b></summary>
+
+| App ID | Game Title |
+| :--- | :--- |
+| `12200` | Bully: Scholarship Edition |
+| `12210` | Grand Theft Auto IV: The Complete Edition |
+| `110800` | L.A. Noire |
+| `204100` | Max Payne 3 |
+| `271590` | Grand Theft Auto V Legacy |
+| `1174180` | Red Dead Redemption 2 |
+| `1546970` | Grand Theft Auto III - The Definitive Edition |
+| `1546990` | Grand Theft Auto: Vice City - The Definitive Edition |
+| `1547000` | Grand Theft Auto San Andreas - The Definitive Edition |
+| `2668510` | Red Dead Redemption |
+| `3240220` | Grand Theft Auto V Enhanced |
+
+</details>
+
+<details open>
+<summary><b>DENUVO (45 Games)</b></summary>
+
+| App ID | Game Title |
+| :--- | :--- |
+| `39140` | FINAL FANTASY VII |
+| `225540` | Just Cause 3 |
+| `234140` | Mad Max |
+| `287700` | METAL GEAR SOLID V: THE PHANTOM PAIN |
+| `312660` | Sniper Elite 4 |
+| `356190` | Middle-earth™: Shadow of War™ |
+| `493340` | Planet Coaster |
+| `517630` | Just Cause 4 |
+| `532210` | Life is Strange 2 |
+| `594570` | Total War: WARHAMMER II |
+| `637100` | Sonic Forces™ |
+| `668580` | Atomic Heart |
+| `678950` | DRAGON BALL FighterZ |
+| `700600` | Evil Genius 2 |
+| `779340` | Total War: THREE KINGDOMS |
+| `785260` | Team Sonic Racing™ |
+| `801800` | Atomfall™ |
+| `953580` | Tourist Bus Simulator |
+| `990080` | Hogwarts Legacy |
+| `1100600` | Football Manager 2020 |
+| `1113000` | Persona 4 Golden |
+| `1222690` | Dragon Age™ Inquisition |
+| `1237320` | Sonic Frontiers |
+| `1244460` | Jurassic World Evolution 2 |
+| `1382330` | Persona 5 Strikers |
+| `1490890` | Demon Slayer -Kimetsu no Yaiba- The Hinokami Chronicles |
+| `1687950` | Persona 5 Royale |
+| `1874000` | Life is Strange Double Exposure |
+| `1904540` | Football Manager 2023 |
+| `1941540` | Mafia: The Old Country |
+| `1971870` | Mortal Kombat 1 |
+| `2050650` | Resident Evil 4 Remake |
+| `2055290` | Sonic Colors: Ultimate™ |
+| `2161700` | Persona 3 Reload |
+| `2215200` | LEGO® Batman™: Legacy of the Dark Knight |
+| `2358720` | Black Myth: Wukong |
+| `2680010` | The First Berserker: Khazan |
+| `2928600` | Demon Slayer -Kimetsu no Yaiba- The Hinokami Chronicles 2 |
+| `3017860` | DOOM: The Dark Ages |
+| `3321460` | Crimson Desert |
+| `3357650` | PRAGMATA |
+| `3483510` | The Adventures of Elliot: The Millennium Tales |
+| `3489700` | Stellar Blade |
+| `3764200` | Resident Evil Requiem |
+| `3768760` | 007 First Light |
+
+</details>
+
+<details open>
+<summary><b>PlayStation (1 Game)</b></summary>
+
+| App ID | Game Title |
+| :--- | :--- |
+| `2428810` | LEGO® Horizon Adventures™ |
+
+</details>
+
+<details open>
+<summary><b>OTHERS (35 Games)</b></summary>
+
+| App ID | Game Title |
+| :--- | :--- |
+| `7940` | Call of Duty 4 Modern Warfare |
+| `10180` | Call of Duty Modern Warfare 2 |
+| `42700` | Call of Duty Black Ops |
+| `50130` | Mafia II |
+| `115300` | Call of Duty Modern Warfare 3 |
+| `202970` | Call of Duty Black Ops II |
+| `203140` | Hitman: Absolution |
+| `209160` | Call of Duty Ghosts |
+| `224060` | Deadpool |
+| `255480` | NBA 2K14 |
+| `292730` | Call of Duty Infinite Warfare |
+| `311210` | Call of Duty Black Ops III |
+| `752590` | A Plague Tale: Innocence |
+| `782330` | DOOM Eternal |
+| `939850` | The Dark Pictures Anthology: Man of Medan |
+| `1114150` | CarX Street |
+| `1250410` | Microsoft Flight Simulator (2020) |
+| `1401590` | Disney Dreamlight Valley |
+| `1466860` | Age of Empires IV: Anniversary Edition |
+| `1498570` | THE KING OF FIGHTERS XV |
+| `1659040` | HITMAN World of Assassination |
+| `1985810` | Call of Duty Black Ops Cold War |
+| `2000950` | Call of Duty Modern Warfare (2019) |
+| `2054970` | Dragon's Dogma 2 |
+| `2172910` | CAPTAIN TSUBASA 2: WORLD FIGHTERS |
+| `2373990` | Solo Leveling: ARISE OVERDRIVE |
+| `2399420` | Le Mans Ultimate |
+| `2806050` | Halo: Campaign Evolved |
+| `2933620` | Call of Duty Black Ops 6 |
+| `3010850` | Gears of War: E-Day |
+| `3265250` | MindsEye |
+| `3595230` | Call of Duty: Modern Warfare II |
+| `3595270` | Call of Duty: Modern Warfare III |
+| `4356430` | NBA 2K27 |
+| `4435490` | Call of Duty®: Modern Warfare® 4 |
+
+</details>
+
+> **Total Verified Bypasses Cataloged:** 170 games across all platforms and DRM layers.
+
+
+---
+
 ## OpenSteamTool Pattern Updates
 
 The `steamtools_assets/opensteamtool/pattern/` folder contains memory scan patterns keyed by the SHA-256 hash of your installed `steamclient64.dll` and `steamui.dll`. When Steam updates, new pattern files are needed.
