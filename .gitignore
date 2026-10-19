@@ -1,24 +1,35 @@
 # Dependencies
 node_modules/
 
-# Build and distribution
+# Build artifacts
 dist/
 build/
 out/
+installer/target/
 
-# Local SQLite databases and caches
+# Local databases (auto-generated, not source)
 *.db
 *.db-journal
+
+# Logs
 *.log
 npm-debug.log*
 
-# Operating System files
+# OS files
 .DS_Store
 Thumbs.db
 ehthumbs.db
 
-# Environment variables & IDE settings
+# Environment / IDE
 .env
 .env.local
 .vscode/
 .idea/
+
+# Windows Sandbox config (local test only)
+*.wsb
+Sandbox-Share/
+
+# Compiled binaries (go to GitHub Releases, not source)
+*.exe
+payload.zip

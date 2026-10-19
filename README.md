@@ -1,140 +1,151 @@
 <div align="center">
 
-# ⚡ Wong — Desktop Game Launcher & Library Hub
+# ⚡ Wong — Steam Library Unlocker & Game Claim Tool
 
-**A lightweight, zero-restart Steam library manager and community bypass hub.**
+**A standalone Steam plugin that lets you claim any game from the Store and install it instantly — no account purchase required.**
 
 [![Platform: Windows 10 / 11](https://img.shields.io/badge/platform-Windows%2010%20%7C%2011-blue.svg)](#)
 [![Runtime: Electron 36](https://img.shields.io/badge/runtime-Electron%2036-green.svg)](https://www.electronjs.org/)
-[![Database: SQLite](https://img.shields.io/badge/database-better--sqlite3-brightgreen.svg)](https://github.com/WiseLibs/better-sqlite3)
-[![UI: Vanilla CSS Bento](https://img.shields.io/badge/ui-Vanilla%20Bento%20Grid-orange.svg)](#)
-[![Status: Showcase Only](https://img.shields.io/badge/status-Showcase%20Edition-red.svg)](#important-notice)
+[![Hook: OpenSteamTool](https://img.shields.io/badge/hook-OpenSteamTool-orange.svg)](https://github.com/OpenSteam001/OpenSteamTool)
+[![Plugin: WongOS / Millennium](https://img.shields.io/badge/loader-WongOS-purple.svg)](#)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
-*Live Steam Ingestion · Zero Client Restart · Bento Grid Interface · Scene Bypass Repository · Denuvo Offline Token Queue*
+*Steam Store Claim Button · 1-Click Library Injection · Auto Steam Restart · Standalone One-Click Installer*
 
 </div>
 
 ---
 
-> [!WARNING]
-> ### Important Notice (Showcase Repository)
-> **Cloning this repository will not give you a working game downloader or cracking tool.**
-> 
-> This public repo contains only the **desktop frontend, design system, and UI state architecture**. All runtime hook binaries (`dwmapi.dll`, `OpenSteamTool.dll`), memory pattern tables, and upstream manifest download sources have been intentionally omitted to prevent misuse and maintain repository compliance.
-> 
-> 📬 **Want to test or evaluate the full functional build?**  
-> Contact directly at: **[technicallyprsent@gmail.com](mailto:technicallyprsent@gmail.com)**
-
----
-
 ## What is Wong?
 
-Wong is a unified game launcher built with Electron and Vanilla web technologies. It bridges public Steam catalog records with local library management and community bypass tools into a single, cohesive desktop interface.
+Wong is a fully self-contained Steam modification toolkit. It injects directly into the Steam client (no separate window needed) and adds a **"Claim"** button to every game on the Steam Store. When you click Claim:
 
-Unlike standard external tools that force you to quit Steam, run scripts, and reboot the client, Wong is built around **in-memory live hooking** — tickets and manifests are recognized on the fly without interrupting your active Steam session.
+1. Wong's background service (`wong-daemon`) contacts its manifest server and downloads the depot ticket for that game.
+2. A Lua entitlement ticket is written to `Steam\config\lua\<AppID>.lua` — the exact format Steam's license engine reads.
+3. A native dialog appears asking **"Restart Steam Now?"** — one click and Steam restarts with the game fully unlocked in your Library.
+4. The game appears in your Steam Library ready to download and install normally.
+
+No cracked executables. No modified Steam files. Pure license ticket injection via OpenSteamTool's in-memory hook.
 
 ---
 
-## Architecture Flow
+## How it Works (Architecture)
 
 ```
-                                  [ User Input: App ID / Title / Dropzone ]
-                                                     │
-                                                     ▼
-                                        [ Live Steam Store Resolver ]
-                                                     │
-                         ┌───────────────────────────┴───────────────────────────┐
-                         ▼                                                       ▼
-            [ Bento Grid UI Library ]                               [ Runtime Injection Hook ]
-            ├── Official 600×900 2x Poster                           ├── dwmapi.dll Proxy Loader
-            ├── SQLite Metadata Cache                                ├── Memory Pattern Scanner
-            └── IndexedDB Wallpaper Canvas                           └── In-Memory Entitlement Check
-                                                                                 │
-                                                                                 ▼
-                                                                     [ Steam Client (No Restart) ]
+Steam Store (Browser)
+       │
+       ▼ [Claim button injected by wong-inject plugin]
+       │
+       ▼
+wong-daemon (localhost:4173)
+  ├── Downloads depot manifest from manifest CDN
+  ├── Writes Steam\config\lua\<AppID>.lua
+  ├── Writes Steam\config\stplug-in\<AppID>.lua
+  └── Returns game name + OK response
+       │
+       ▼
+"Restart Steam Now?" dialog
+       │
+       ▼
+Steam restarts → reads new Lua tickets → Game appears in Library ✓
+```
+
+### Components
+
+| Component | Location | Purpose |
+|---|---|---|
+| **wong-daemon.js** | `wong-daemon.js` | Ultra-lightweight Node.js headless server. Runs on port 4173 with ~18 MB RAM. No console window. |
+| **server.js** | `server.js` | Full backend API: manifest download, Lua injection, library DB, Steam path detection, restart API. |
+| **wong-inject plugin** | `wong-inject/` | WongOS/Millennium Steam plugin. Injects the Claim button into the Steam Store CEF browser. |
+| **OpenSteamTool hook** | `steamtools_assets/` | `xinput1_4.dll` → `OpenSteamTool.dll` → hooks `steamclient64.dll` to read Lua tickets. |
+| **Wong-Setup.exe** | Releases tab | One-click Rust installer. Detects Steam, extracts all components, registers daemon autostart. |
+| **Electron app** | `index.html`, `js/app.js` | Optional desktop app UI: Library manager, SteamDB search, bypass archive, settings wizard. |
+
+---
+
+## How the Steam Hook Works
+
+Wong uses **OpenSteamTool** — an open-source Steam license hook. Here's the chain:
+
+```
+Steam.exe launches
+       │
+       ▼
+steamui.dll imports xinput1_4.dll (controller API)
+       │
+       ▼
+xinput1_4.dll (proxy) → loads OpenSteamTool.dll
+       │
+       ▼
+OpenSteamTool scans steamclient64.dll memory patterns
+(pattern definitions in opensteamtool/pattern/steamclient/)
+       │
+       ▼
+Patches the license entitlement check in memory
+       │
+       ▼
+Reads Steam\config\lua\*.lua — executes addappid() for each file
+       │
+       ▼
+Steam thinks you own those App IDs
+```
+
+No Steam files are permanently modified. The hook only lives in memory while Steam is running. Remove the DLLs and Steam returns to normal.
+
+---
+
+## Repository Structure
+
+```
+Wong/
+├── index.html              # Electron desktop app UI
+├── electron-main.js        # Electron window manager
+├── electron-preload.js     # Secure IPC bridge
+├── server.js               # Full backend API server
+├── wong-daemon.js          # Headless daemon entry point
+├── package.json            # Node.js dependencies
+├── start-daemon.vbs        # Silent daemon launcher (no console)
+├── stop-daemon.bat         # Daemon shutdown script
+│
+├── js/
+│   └── app.js              # Full frontend SPA logic
+│
+├── css/
+│   └── style.css           # Complete design system
+│
+├── steamtools_assets/      # Hook DLLs and pattern definitions
+│   ├── dwmapi.dll          # Legacy proxy (older Steam versions)
+│   ├── xinput1_4.dll       # Active proxy loader for Steam 64-bit
+│   ├── OpenSteamTool.dll   # Core memory hook engine
+│   ├── cloud_redirect.dll  # Cloud save redirect hook
+│   ├── opensteamtool/
+│   │   ├── ipc/steamclient/      # IPC pattern definitions per steamclient64.dll hash
+│   │   └── pattern/
+│   │       ├── steamclient/      # Memory patch patterns per steamclient64.dll hash
+│   │       └── steamui/         # Memory patch patterns per steamui.dll hash
+│   └── millennium_plugin/        # Fallback Millennium plugin loader
+│
+├── wong-inject/            # Steam Store Claim Button plugin (WongOS/Millennium)
+│   ├── frontend/index.js   # CEF frontend: injects Claim button, handles UI
+│   ├── backend/main.py     # Python backend sidecar (minimal)
+│   ├── metadata.json       # Plugin metadata
+│   └── plugin.json         # Plugin entry configuration
+│
+└── installer/              # Standalone one-click installer (Rust)
+    ├── Cargo.toml
+    └── src/main.rs         # Rust installer source
 ```
 
 ---
 
-## Visual Walkthrough & Demos
+## Installation (For Developers / Self-Build)
 
-### 1. Ingestion Showcase: Adding a Game Live
-Demonstrating real-time catalog search, App ID injection, and instant Bento card rendering without restarting Steam.
+### Prerequisites
+- [Node.js 18+](https://nodejs.org/)
+- [Rust](https://rustup.rs/) (for building the installer)
+- Steam installed at default path
 
-https://github.com/nabinnnnwongism/Wongtool/raw/main/illustration/Adding%20Game.mp4
-
----
-
-### 2. Bypass & Scene Fix Injection (Demo: PRAGMATA)
-Demonstrating automatic game directory detection, high-resolution asset retrieval, and one-click fix extraction.
-
-https://github.com/nabinnnnwongism/Wongtool/raw/main/illustration/Bypassing%20example.mp4
-
----
-
-## Core Systems
-
-### 1. Live SteamTool Engine
-- **Direct Library Ingestion**: Paste any numeric Steam App ID or search by title to pull game metadata and add it to your collection.
-- **Zero Client Restart**: Injects runtime tickets and depot manifests dynamically. Steam picks up the entitlement immediately without requiring `taskkill /f /im steam.exe`.
-- **Drag-and-Drop Ingestion**: Drop raw `.lua`, `.manifest`, or `.zip` ticket archives directly onto the interface dropzone for automated routing.
-
-### 2. Scene Bypass & Fix Archive
-Curated game fixes, standalone bypasses, and compatibility patches organized across major publisher ecosystems:
-
-| Archive | Focus | Coverage |
-| :--- | :--- | :--- |
-| **Electronic Arts** | EA App runtime bypasses & offline fixes | Frostbite engine titles |
-| **Ubisoft** | Connect wrapper patches & license tickets | Uplay / Connect catalog |
-| **Rockstar** | Social Club bypasses & launcher emulators | RAGE engine releases |
-| **Denuvo** | Scene crack integration & token managers | High-security protected titles |
-| **PlayStation** | PSN overlay fixes & standalone emulators | PC port catalog |
-| **Other Games** | Indie & general community fixes | Wide catalog |
-
-Bypasses and releases are sourced from premier scene groups and community reverse engineers including **Voices38**, **RUNE**, **EMPRESS**, **FCKDRM**, **TENOKE**, and others.
-
----
-
-## In Development / Early Access
-
-### 1. Automated Denuvo Offline Activator
-For uncracked Denuvo-protected games, Wong includes an automated token provisioning pipeline to generate offline activation files:
-
-1. **Select Game**: Open **Offline Activation** and pick from available token allocations.
-2. **Instant Provisioning**: If a token slot is currently open, Wong writes the activation payload straight to your game directory. You launch the game's `.exe` and play completely offline.
-3. **Smart Queue System**: When daily token limits are reached, your client joins an automated queue. When your slot opens, the background service claims the token on your next PC boot, installs it, and readies the game.
-
-> *Early Access Note: Daily token slots are limited and time-sensitive. If your machine remains offline or unresponsive when your queue window triggers, the reservation expires to pass the slot to the next user.*
-
-### 2. Hypervisor (HV) Bypass Injection *(R&D)*
-Active research into low-overhead, hypervisor-level bypass injection. The objective is to provide a clean, zero-configuration injection layer that runs without demanding risky UEFI alterations, custom boot parameters, or driver signature bypasses.
-
----
-
-## Design & UI Architecture
-
-| Module | Implementation |
-| :--- | :--- |
-| **Bento Grid** | CSS Grid with fixed aspect-ratio cards matching Valve's official 600×900 2x capsule format. |
-| **Curved Rail** | Glossy, floating vertical navigation sidebar with SVG glyphs and hover scene previews. |
-| **Atmosphere Engine** | Instant toggle between Ivory (Light) and Obsidian (Dark) palettes with persistent state. |
-| **Custom Wallpapers** | Local PNG/JPG/GIF canvas stored in browser **IndexedDB** with live opacity and color wash sliders. |
-| **Native Titlebar** | Frameless Electron window featuring custom drag margins and titlebar window controls. |
-
----
-
-## Tech Stack
-
-- **Runtime**: [Electron 36](https://www.electronjs.org/)
-- **Backend Service**: Node.js embedded HTTP server
-- **Database**: SQLite via [better-sqlite3](https://github.com/WiseLibs/better-sqlite3)
-- **Frontend**: Vanilla HTML5, Vanilla JavaScript (ES Modules, custom SPA router)
-- **Styling**: Vanilla CSS (Design Tokens, Glassmorphism, CSS Grid)
-- **Icons**: [Lucide Icons](https://lucide.dev/) + Custom vector marks
-
----
-
-## Setup (Showcase Build)
+### Run the Electron App
 
 ```bash
 # Clone the repository
@@ -144,19 +155,70 @@ cd Wongtool
 # Install dependencies
 npm install
 
-# Run the Electron desktop client
+# Start the Electron desktop app
 npm start
+```
 
-# Or run in browser mode
-npm run dev
+### Build the Standalone Installer (Rust)
+
+```bash
+cd installer
+cargo build --release
+# Output: installer/target/release/installer.exe
+```
+
+The installer bundles `payload.zip` (all Steam hook files + daemon) and extracts it all in one click.
+
+### Run Only the Daemon (Headless)
+
+If you just want the background API without the Electron window:
+
+```bash
+node wong-daemon.js
+# Starts on localhost:4173 silently
 ```
 
 ---
 
-## Testing & Contact
+## Standalone Installer (No Dev Setup Needed)
 
-For closed testing builds, architecture inquiries, or developer evaluation:  
-📩 **Email**: [technicallyprsent@gmail.com](mailto:technicallyprsent@gmail.com)
+For end users who just want to install and use it, download `Wong-Setup.exe` from the **[Releases](../../releases)** tab.
+
+The installer:
+1. Auto-detects your Steam path (registry + default paths)
+2. Kills Steam if running
+3. Extracts all hook DLLs, plugins, and daemon into the correct locations
+4. Registers `wong-daemon.exe` to auto-start silently on Windows login
+5. Offers to launch Steam immediately
+
+**After install**, just open Steam, go to any game's Store page — the **Claim** button will be there.
+
+---
+
+## OpenSteamTool Pattern Updates
+
+The `steamtools_assets/opensteamtool/pattern/` folder contains memory scan patterns keyed by the SHA-256 hash of your installed `steamclient64.dll` and `steamui.dll`. When Steam updates, new pattern files are needed.
+
+Current patterns are included for:
+- `steamclient64.dll`: `E9045710...` (latest as of Oct 2026)
+- `steamui.dll`: `1B945794...` (latest as of Oct 2026)
+
+If Steam updates and Claim stops working, this is the first place to check.
+
+---
+
+## Tech Stack
+
+| Layer | Technology |
+|---|---|
+| Desktop App | [Electron 36](https://www.electronjs.org/) |
+| Backend API | Node.js native HTTP server |
+| Database | SQLite via [better-sqlite3](https://github.com/WiseLibs/better-sqlite3) |
+| Frontend | Vanilla HTML5, Vanilla JS (ES Modules, custom SPA router) |
+| Styling | Vanilla CSS (Glassmorphism, CSS Grid, Bento layout) |
+| Steam Plugin | WongOS / [Millennium](https://github.com/shdwmtr/millennium) loader |
+| Hook Engine | [OpenSteamTool](https://github.com/OpenSteam001/OpenSteamTool) |
+| Installer | [Rust](https://www.rust-lang.org/) with embedded zip payload |
 
 ---
 

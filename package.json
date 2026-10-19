@@ -1,29 +1,91 @@
 {
-  "name": "wong-desktop",
+  "name": "wong",
   "productName": "Wong",
   "version": "1.0.0",
-  "description": "Wong — The Ultimate Game Launcher & Library (Showcase Edition)",
+  "description": "Wong — Ultimate Game Launcher & Library",
   "main": "electron-main.js",
   "scripts": {
-    "start": "electron .",
+    "start": "node server.js",
     "dev": "node server.js",
     "electron": "electron .",
-    "electron:dev": "set WONG_DEV=1 && electron ."
+    "electron:dev": "set WONG_DEV=1 && electron .",
+    "daemon": "node wong-daemon.js",
+    "daemon:install": "node scripts/install-daemon.js",
+    "daemon:uninstall": "node scripts/uninstall-daemon.js",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder -c.npmRebuild=false"
+  },
+  "build": {
+    "appId": "com.wong.desktop",
+    "productName": "Wong",
+    "copyright": "Copyright © 2026 Wong",
+    "npmRebuild": false,
+    "nodeGypRebuild": false,
+    "buildDependenciesFromSource": false,
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "electron-main.js",
+      "electron-preload.js",
+      "server.js",
+      "index.html",
+      "js/**",
+      "css/**",
+      "Images/**",
+      "src/**",
+      "node_modules/**",
+      "!node_modules/.cache/**",
+      "!**/*.map"
+    ],
+    "extraResources": [
+      {
+        "from": "steamtools_assets",
+        "to": "steamtools_assets"
+      }
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "Images/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Wong"
+    },
+    "portable": {
+      "artifactName": "Wong-Portable.exe"
+    },
+    "compression": "maximum",
+    "asar": true,
+    "asarUnpack": [
+      "node_modules/better-sqlite3/**",
+      "node_modules/extract-zip/**"
+    ]
   },
   "dependencies": {
-    "better-sqlite3": "^12.6.2"
+    "@supabase/supabase-js": "^2.95.3",
+    "better-sqlite3": "^12.6.2",
+    "extract-zip": "^2.0.1"
   },
   "devDependencies": {
-    "electron": "^36.4.0"
-  },
-  "keywords": [
-    "electron",
-    "game-launcher",
-    "steam-library",
-    "bento-grid",
-    "desktop-app",
-    "ui-design"
-  ],
-  "author": "Wong",
-  "license": "MIT"
+    "electron": "^36.4.0",
+    "electron-builder": "^25.1.8",
+    "png-to-ico": "^3.0.2"
+  }
 }

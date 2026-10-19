@@ -1,0 +1,9 @@
+{
+  "$schema": "https://raw.githubusercontent.com/SteamClientHomebrew/Millennium/main/src/sys/plugin-schema.json",
+  "name": "wong-inject",
+  "common_name": "Wong - Direct Claim & Bypass",
+  "description": "Adds Claim to Steam Store and BYPASS button to Steam Library hero action bar. Powered by Wong / Powerplay.",
+  "version": "1.1.0",
+  "author": "Powerplay",
+  "useBackend": false
+}

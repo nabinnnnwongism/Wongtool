@@ -43,7 +43,7 @@ function createWindow() {
       nodeIntegration: false,
       contextIsolation: true,
       preload: path.join(__dirname, 'electron-preload.js'),
-      webSecurity: false, // allow loading local images etc.
+      webSecurity: false, // allow loading local Steam images etc.
       partition: 'persist:wong',
     },
   });
@@ -84,9 +84,20 @@ function createWindow() {
 }
 
 // ── IPC handlers (system actions forwarded from preload) ──────────────────────
+const { exec, spawn } = require('child_process');
+const fs = require('fs');
+
 ipcMain.on('reiniciarSteam', () => {
-  // Showcase mode: Steam restart feedback
-  console.log('[Wong Showcase] Steam restart triggered (Showcase mode).');
+  const steamCandidates = [
+    'C:\\Program Files (x86)\\Steam\\Steam.exe',
+    'C:\\Program Files\\Steam\\Steam.exe',
+    'C:\\Steam\\Steam.exe',
+    'D:\\Steam\\Steam.exe',
+  ];
+  exec('taskkill /f /im steam.exe', () => {
+    const exe = steamCandidates.find(p => fs.existsSync(p));
+    if (exe) exec(`"${exe}"`);
+  });
 });
 
 ipcMain.handle('dialog:openDirectory', async (_e, opts = {}) => {

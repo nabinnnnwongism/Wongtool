@@ -970,3 +970,399 @@ body.dark-theme .sidebar .bar { background:linear-gradient(90deg,transparent,rgb
 body.dark-theme .app.has-custom-background main { background-color:#0c0e11; }
 @media(max-width:600px) { .page-head { padding:20px; } .page-head .count { display:none; } .provider-intro { align-items:flex-start; flex-direction:column; } }
 
+/* ════════════════════════════════════════
+   STEAM-STYLE BYPASS BUTTON
+   ════════════════════════════════════════ */
+.bd-fix-action-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+.bd-fix-action-wrapper-inner {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+/* Mimics Steam's Install button exactly */
+.bd-steam-bypass-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  height: 48px;
+  padding: 0 22px 0 18px;
+  border-radius: 4px;
+  border: none;
+  background: linear-gradient(180deg, #6ba3d6 0%, #4c7dbf 42%, #3a6baa 43%, #2a5896 100%);
+  color: #fff;
+  font: 800 13px/1 Manrope, sans-serif;
+  letter-spacing: .01em;
+  text-shadow: 0 1px 2px rgba(0,0,0,.4);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.25),
+    inset 0 -1px 0 rgba(0,0,0,.25),
+    0 2px 8px rgba(0,0,0,.45),
+    0 0 0 1px rgba(23,42,82,.9);
+  cursor: pointer;
+  overflow: hidden;
+  transition: filter .15s, transform .1s, box-shadow .15s;
+  white-space: nowrap;
+}
+.bd-steam-bypass-btn::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(255,255,255,.15) 0%, transparent 50%);
+  border-radius: 4px;
+  pointer-events: none;
+}
+.bd-steam-bypass-btn:hover {
+  filter: brightness(1.08);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.28),
+    inset 0 -1px 0 rgba(0,0,0,.28),
+    0 4px 14px rgba(0,0,0,.5),
+    0 0 0 1px rgba(23,42,82,.9),
+    0 0 18px rgba(74,124,191,.45);
+}
+.bd-steam-bypass-btn:active {
+  transform: translateY(1px);
+  filter: brightness(.96);
+}
+.bd-steam-bypass-btn.checking {
+  cursor: wait;
+  filter: brightness(.88);
+  pointer-events: none;
+}
+.bd-bypass-btn-icon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  filter: drop-shadow(0 1px 1px rgba(0,0,0,.3));
+}
+
+/* ════════════════════════════════════════
+   BYPASS CHECK MODAL — Steam-style
+   ════════════════════════════════════════ */
+.bypass-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9000;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, .72);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  animation: bmFadeIn .22s ease both;
+}
+.bypass-modal-overlay.active {
+  display: flex;
+}
+
+@keyframes bmFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.bypass-modal-card {
+  width: min(560px, calc(100vw - 48px));
+  background: #1b2838;
+  border: 1px solid #3d5a8a;
+  border-radius: 6px;
+  box-shadow:
+    0 0 0 1px rgba(0,0,0,.8),
+    0 24px 64px rgba(0,0,0,.85),
+    0 0 48px rgba(0,0,0,.4);
+  overflow: hidden;
+  animation: bmSlideUp .28s cubic-bezier(.2,.8,.2,1) both;
+}
+
+@keyframes bmSlideUp {
+  from { opacity: 0; transform: translateY(18px) scale(.97); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* Topbar: game icon + name + badge */
+.bypass-modal-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 14px 18px;
+  background: linear-gradient(180deg, #1d3352 0%, #172840 100%);
+  border-bottom: 1px solid #2a4870;
+}
+.bypass-modal-game-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.bypass-modal-game-icon {
+  width: 46px;
+  height: 46px;
+  border-radius: 4px;
+  object-fit: cover;
+  border: 1px solid rgba(255,255,255,.1);
+  flex-shrink: 0;
+  background: #11202f;
+}
+.bypass-modal-game-name {
+  font: 700 14px/1.2 Manrope, sans-serif;
+  color: #c6d4df;
+  letter-spacing: .01em;
+}
+.bypass-modal-subtitle {
+  font: 500 10px/1 DM Mono, monospace;
+  color: #7da2bf;
+  margin-top: 4px;
+  text-transform: uppercase;
+  letter-spacing: .09em;
+}
+
+/* DRM status badge (top right of modal) */
+.bypass-modal-drm-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  border-radius: 3px;
+  font: 700 10px/1 DM Mono, monospace;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.bm-drm-bad   { background: rgba(239,68,68,.18);  border: 1px solid rgba(239,68,68,.5);  color: #fca5a5; }
+.bm-drm-good  { background: rgba(34,197,94,.16);  border: 1px solid rgba(34,197,94,.45); color: #86efac; }
+.bm-drm-warn  { background: rgba(59,130,246,.18); border: 1px solid rgba(59,130,246,.5); color: #93c5fd; }
+
+/* Divider */
+.bypass-modal-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #2a4870, transparent);
+  margin: 0;
+}
+
+/* Body: icon + text block */
+.bypass-modal-body {
+  display: flex;
+  gap: 16px;
+  padding: 20px 18px 16px;
+  align-items: flex-start;
+}
+.bypass-modal-alert-icon {
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  margin-top: 2px;
+}
+.bm-alert-red   { background: rgba(239,68,68,.18);  border: 1px solid rgba(239,68,68,.4);  color: #f87171; }
+.bm-alert-green { background: rgba(34,197,94,.16);  border: 1px solid rgba(34,197,94,.4);  color: #4ade80; }
+.bm-alert-blue  { background: rgba(59,130,246,.16); border: 1px solid rgba(59,130,246,.4); color: #60a5fa; }
+
+.bypass-modal-text-block { flex: 1; min-width: 0; }
+.bypass-modal-headline {
+  margin: 0 0 8px;
+  font: 700 15px/1.35 Manrope, sans-serif;
+  color: #c6d4df;
+}
+.bypass-modal-desc {
+  margin: 0 0 10px;
+  font: 13px/1.65 Manrope, sans-serif;
+  color: #8ba7c0;
+}
+.bypass-modal-desc strong { color: #c6d4df; }
+.bypass-modal-hint {
+  margin: 10px 0 8px;
+  font: 11px/1.6 DM Mono, monospace;
+  color: #7da2bf;
+}
+
+/* DRM names list */
+.bypass-modal-drm-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 6px 0 10px;
+}
+.bm-drm-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 3px;
+  border: 1px solid rgba(239,68,68,.4);
+  background: rgba(239,68,68,.1);
+  color: #fca5a5;
+  font: 700 10px/1 DM Mono, monospace;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+.bm-drm-chip svg { flex-shrink: 0; }
+
+/* Reddit community links */
+.bypass-modal-links { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 4px; }
+.bypass-modal-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 10px;
+  border-radius: 3px;
+  border: 1px solid rgba(93,147,201,.4);
+  background: rgba(93,147,201,.1);
+  color: #6cb0e0;
+  font: 600 11px DM Mono, monospace;
+  text-decoration: none;
+  transition: all .18s;
+}
+.bypass-modal-link:hover { border-color: rgba(93,147,201,.8); background: rgba(93,147,201,.2); color: #90c8ef; }
+
+/* Folder confirm box */
+.bypass-modal-folder-confirm {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  margin: 8px 0 10px;
+  padding: 10px 14px;
+  border-radius: 4px;
+  border: 1px solid rgba(59,130,246,.45);
+  background: rgba(59,130,246,.1);
+}
+.bypass-modal-folder-confirm svg { flex-shrink: 0; margin-top: 2px; color: #60a5fa; }
+.bypass-modal-folder-path {
+  font: 12px/1.55 DM Mono, monospace;
+  color: #7dd3fc;
+  word-break: break-all;
+  user-select: text;
+}
+
+/* Action row buttons */
+.bypass-modal-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 12px 18px 16px;
+  border-top: 1px solid #1e3453;
+  background: #172638;
+}
+.bypass-modal-btn {
+  min-width: 90px;
+  height: 34px;
+  padding: 0 18px;
+  border-radius: 3px;
+  border: none;
+  font: 700 12px/1 Manrope, sans-serif;
+  letter-spacing: .01em;
+  cursor: pointer;
+  transition: filter .15s, transform .1s;
+  white-space: nowrap;
+}
+.bypass-modal-btn:active { transform: translateY(1px); }
+.bm-btn-primary {
+  background: linear-gradient(180deg, #6ba3d6 0%, #4c7dbf 42%, #3a6baa 43%, #2a5896 100%);
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(0,0,0,.4);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.22), 0 2px 6px rgba(0,0,0,.4), 0 0 0 1px rgba(23,42,82,.9);
+}
+.bm-btn-primary:hover  { filter: brightness(1.1); }
+.bm-btn-green {
+  background: linear-gradient(180deg, #6bc46b 0%, #4faa4f 42%, #3e993e 43%, #2e8a2e 100%);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.22), 0 2px 6px rgba(0,0,0,.4), 0 0 0 1px rgba(20,60,20,.9);
+}
+.bm-btn-secondary {
+  background: linear-gradient(180deg, #4a5a6e 0%, #3a4a5e 42%, #2e3e52 43%, #243248 100%);
+  color: #c6d4df;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.12), 0 2px 4px rgba(0,0,0,.3), 0 0 0 1px rgba(10,20,40,.9);
+}
+.bm-btn-secondary:hover { filter: brightness(1.15); }
+.bm-btn-bypass {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: linear-gradient(180deg, #6ba3d6 0%, #4c7dbf 42%, #3a6baa 43%, #2a5896 100%);
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(0,0,0,.4);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.22), 0 2px 6px rgba(0,0,0,.4), 0 0 0 1px rgba(23,42,82,.9);
+  padding: 0 18px 0 14px;
+}
+.bm-btn-bypass:hover { filter: brightness(1.1); }
+.bm-btn-disabled { opacity: .5; cursor: default; }
+
+/* ── Mini Steam-style download progress bar ── */
+.bm-download-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 4px 0;
+}
+.bm-download-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.bm-download-title {
+  font: 700 13px/1 Manrope, sans-serif;
+  color: #c6d4df;
+}
+.bm-download-speed {
+  font: 700 11px/1 DM Mono, monospace;
+  color: #7da2bf;
+  letter-spacing: .02em;
+}
+.bm-steam-progress-wrap { display: flex; flex-direction: column; gap: 5px; }
+.bm-steam-progress-track {
+  height: 9px;
+  border-radius: 2px;
+  background: #0e1a27;
+  border: 1px solid #1e3453;
+  overflow: hidden;
+  position: relative;
+}
+.bm-steam-progress-fill {
+  height: 100%;
+  width: 0%;
+  border-radius: 1px;
+  background: linear-gradient(90deg, #5294c8 0%, #6db5e8 50%, #5294c8 100%);
+  box-shadow: 0 0 8px rgba(82,148,200,.6);
+  transition: width .35s ease;
+  position: relative;
+}
+.bm-steam-progress-fill::after {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 40%;
+  background: rgba(255,255,255,.18);
+  border-radius: 1px 1px 0 0;
+}
+.bm-steam-progress-labels {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.bm-dl-pct {
+  font: 700 10px/1 DM Mono, monospace;
+  color: #5294c8;
+  letter-spacing: .06em;
+}
+.bm-dl-eta {
+  font: 500 10px/1 DM Mono, monospace;
+  color: #7da2bf;
+  letter-spacing: .04em;
+}
+.bm-download-file-row {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font: 10px/1 DM Mono, monospace;
+}
+.bm-dl-file-label { color: #5a7a96; }
+.bm-dl-file-name  { color: #8fa8bf; word-break: break-all; }

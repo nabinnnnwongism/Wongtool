@@ -91,6 +91,9 @@
                 <button class="btn-steamtool-util" id="open-steamdb-btn" type="button" title="Open SteamDB Catalog Explorer">
                   <i data-lucide="compass"></i> Explore Catalog
                 </button>
+                <button class="btn-steamtool-util" id="sync-library-btn" type="button" title="Scan SteamTool Lua files and sync all injected games into library">
+                  <i data-lucide="database"></i> Sync Library
+                </button>
               </div>
               <div class="steamtool-drop-hint">
                 <i data-lucide="layers" size="13"></i> Auto-installs Lua scripts & depotcache manifests
@@ -274,14 +277,25 @@
               </div>
 
               <div class="bd-fix-action-wrapper">
-                <button class="bd-fix-apply-btn" id="bd-apply-btn" type="button" disabled>
-                  <span class="bd-btn-text" id="bd-btn-text">
-                    <i data-lucide="zap" size="14"></i>
-                    <span>Inject</span>
-                  </span>
-                  <div class="bd-progress-bar-fill" id="bd-progress-bar"></div>
+                <!-- Steam-style BYPASS button -->
+                <button class="bd-steam-bypass-btn" id="bd-steam-bypass-btn" type="button">
+                  <svg class="bd-bypass-btn-icon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                    <path d="M10 2L10 13M10 13L6.5 9.5M10 13L13.5 9.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M3 15H17" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                  </svg>
+                  <span id="bd-steam-bypass-label">BYPASS</span>
                 </button>
-                <span class="bd-progress-percent" id="bd-progress-percent">0%</span>
+
+                <div class="bd-fix-action-wrapper-inner">
+                  <button class="bd-fix-apply-btn" id="bd-apply-btn" type="button" disabled>
+                    <span class="bd-btn-text" id="bd-btn-text">
+                      <i data-lucide="zap" size="14"></i>
+                      <span>Inject</span>
+                    </span>
+                    <div class="bd-progress-bar-fill" id="bd-progress-bar"></div>
+                  </button>
+                  <span class="bd-progress-percent" id="bd-progress-percent">0%</span>
+                </div>
               </div>
             </div>
 
@@ -377,6 +391,228 @@
             </div>
           </div>
         </section>
+
+        <!-- ════════════════════════════════════════
+             BYPASS CHECK MODAL — Steam-style notification
+             ════════════════════════════════════════ -->
+        <!-- Version 1: DRM found, no bypass available -->
+        <div class="bypass-modal-overlay" id="bypass-modal-v1" role="dialog" aria-modal="true" aria-labelledby="bm1-title">
+          <div class="bypass-modal-card bm-v1">
+            <div class="bypass-modal-topbar">
+              <div class="bypass-modal-game-info">
+                <img class="bypass-modal-game-icon" id="bm1-icon" src="" alt="" />
+                <div>
+                  <div class="bypass-modal-game-name" id="bm1-game-name">Game Title</div>
+                  <div class="bypass-modal-subtitle">DRM Status Report</div>
+                </div>
+              </div>
+              <div class="bypass-modal-drm-badge bm-drm-bad">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                DRM Active
+              </div>
+            </div>
+            <div class="bypass-modal-divider"></div>
+            <div class="bypass-modal-body">
+              <div class="bypass-modal-alert-icon bm-alert-red">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              </div>
+              <div class="bypass-modal-text-block">
+                <p class="bypass-modal-headline">Unfortunately we don't have a bypass for this game currently.</p>
+                <p class="bypass-modal-desc">Without a bypass, this game won't work as it uses active DRM protection:</p>
+                <div class="bypass-modal-drm-list" id="bm1-drm-list">
+                  <!-- DRM names injected here -->
+                </div>
+                <p class="bypass-modal-hint">You can check community sources for user-provided cracks:</p>
+                <div class="bypass-modal-links">
+                  <a class="bypass-modal-link" href="https://www.reddit.com/r/CrackWatch/" target="_blank" rel="noopener">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8.56 2.75c4.37 6.03 6.02 9.42 8.03 17.72m2.54-15.38c-3.72 4.35-8.94 5.66-16.88 5.85m19.5 1.9c-3.5-.93-6.63-.82-8.94 0-2.58.92-5.01 2.86-7.44 6.32"/></svg>
+                    r/CrackWatch
+                  </a>
+                  <a class="bypass-modal-link" href="https://www.reddit.com/r/PiratedGames/" target="_blank" rel="noopener">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8.56 2.75c4.37 6.03 6.02 9.42 8.03 17.72m2.54-15.38c-3.72 4.35-8.94 5.66-16.88 5.85m19.5 1.9c-3.5-.93-6.63-.82-8.94 0-2.58.92-5.01 2.86-7.44 6.32"/></svg>
+                    r/PiratedGames
+                  </a>
+                </div>
+              </div>
+            </div>
+            <div class="bypass-modal-actions">
+              <button class="bypass-modal-btn bm-btn-primary" id="bm1-ok-btn">Okay</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Version 2: No DRM at all -->
+        <div class="bypass-modal-overlay" id="bypass-modal-v2" role="dialog" aria-modal="true" aria-labelledby="bm2-title">
+          <div class="bypass-modal-card bm-v2">
+            <div class="bypass-modal-topbar">
+              <div class="bypass-modal-game-info">
+                <img class="bypass-modal-game-icon" id="bm2-icon" src="" alt="" />
+                <div>
+                  <div class="bypass-modal-game-name" id="bm2-game-name">Game Title</div>
+                  <div class="bypass-modal-subtitle">DRM Status Report</div>
+                </div>
+              </div>
+              <div class="bypass-modal-drm-badge bm-drm-good">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9,12 11,14 15,10"/></svg>
+                DRM Free
+              </div>
+            </div>
+            <div class="bypass-modal-divider"></div>
+            <div class="bypass-modal-body">
+              <div class="bypass-modal-alert-icon bm-alert-green">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>
+              </div>
+              <div class="bypass-modal-text-block">
+                <p class="bypass-modal-headline">This game has no DRM!</p>
+                <p class="bypass-modal-desc">You can safely install this game and play it right away — no bypass or extra steps needed. Just download and enjoy.</p>
+              </div>
+            </div>
+            <div class="bypass-modal-actions">
+              <button class="bypass-modal-btn bm-btn-primary bm-btn-green" id="bm2-ok-btn">Okay</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Version 3a: DRM + bypass available — game NOT installed -->
+        <div class="bypass-modal-overlay" id="bypass-modal-v3a" role="dialog" aria-modal="true" aria-labelledby="bm3a-title">
+          <div class="bypass-modal-card bm-v3">
+            <div class="bypass-modal-topbar">
+              <div class="bypass-modal-game-info">
+                <img class="bypass-modal-game-icon" id="bm3a-icon" src="" alt="" />
+                <div>
+                  <div class="bypass-modal-game-name" id="bm3a-game-name">Game Title</div>
+                  <div class="bypass-modal-subtitle">Bypass Available</div>
+                </div>
+              </div>
+              <div class="bypass-modal-drm-badge bm-drm-warn">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13,2 3,14 12,14 11,22 21,10 12,10 13,2"/></svg>
+                Bypass Ready
+              </div>
+            </div>
+            <div class="bypass-modal-divider"></div>
+            <div class="bypass-modal-body">
+              <div class="bypass-modal-alert-icon bm-alert-blue">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              </div>
+              <div class="bypass-modal-text-block">
+                <p class="bypass-modal-headline">We found a bypass for this game!</p>
+                <p class="bypass-modal-desc">This game uses active DRM:</p>
+                <div class="bypass-modal-drm-list" id="bm3a-drm-list"></div>
+                <p class="bypass-modal-desc">Our app provides a bypass for this game. <strong>Please make sure you've fully installed the game first</strong>, then click BYPASS again to apply it.</p>
+              </div>
+            </div>
+            <div class="bypass-modal-actions">
+              <button class="bypass-modal-btn bm-btn-primary" id="bm3a-ok-btn">Got it — I'll install first</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Version 3b: DRM + bypass + game IS installed → confirm folder & download -->
+        <div class="bypass-modal-overlay" id="bypass-modal-v3b" role="dialog" aria-modal="true" aria-labelledby="bm3b-title">
+          <div class="bypass-modal-card bm-v3">
+            <div class="bypass-modal-topbar">
+              <div class="bypass-modal-game-info">
+                <img class="bypass-modal-game-icon" id="bm3b-icon" src="" alt="" />
+                <div>
+                  <div class="bypass-modal-game-name" id="bm3b-game-name">Game Title</div>
+                  <div class="bypass-modal-subtitle">Ready to Bypass</div>
+                </div>
+              </div>
+              <div class="bypass-modal-drm-badge bm-drm-warn">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13,2 3,14 12,14 11,22 21,10 12,10 13,2"/></svg>
+                Bypass Ready
+              </div>
+            </div>
+            <div class="bypass-modal-divider"></div>
+
+            <!-- State A: Confirm location -->
+            <div id="bm3b-state-confirm">
+              <div class="bypass-modal-body">
+                <div class="bypass-modal-alert-icon bm-alert-blue">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>
+                </div>
+                <div class="bypass-modal-text-block">
+                  <p class="bypass-modal-headline">Are you sure the game is installed here?</p>
+                  <p class="bypass-modal-desc">We detected your game installation at:</p>
+                  <div class="bypass-modal-folder-confirm">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+                    <span class="bypass-modal-folder-path" id="bm3b-folder-path">C:\Program Files (x86)\Steam\steamapps\common\Game</span>
+                  </div>
+                  <p class="bypass-modal-hint">If this looks wrong, click Cancel and use the Manual folder option instead.</p>
+                </div>
+              </div>
+              <div class="bypass-modal-actions">
+                <button class="bypass-modal-btn bm-btn-secondary" id="bm3b-cancel-btn">Cancel</button>
+                <button class="bypass-modal-btn bm-btn-bypass" id="bm3b-bypass-btn">
+                  <svg width="13" height="13" viewBox="0 0 20 20" fill="none"><path d="M10 2L10 13M10 13L6.5 9.5M10 13L13.5 9.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 15H17" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                  Bypass
+                </button>
+              </div>
+            </div>
+
+            <!-- State B: Downloading bypass (mini Steam-style progress) -->
+            <div id="bm3b-state-downloading" style="display:none;">
+              <div class="bypass-modal-body">
+                <div class="bm-download-info">
+                  <div class="bm-download-header">
+                    <span class="bm-download-title">Downloading bypass…</span>
+                    <span class="bm-download-speed" id="bm3b-speed">— MB/s</span>
+                  </div>
+                  <!-- Mini Steam-style progress bar -->
+                  <div class="bm-steam-progress-wrap">
+                    <div class="bm-steam-progress-track">
+                      <div class="bm-steam-progress-fill" id="bm3b-progress-fill"></div>
+                    </div>
+                    <div class="bm-steam-progress-labels">
+                      <span class="bm-dl-pct" id="bm3b-dl-pct">0%</span>
+                      <span class="bm-dl-eta" id="bm3b-dl-eta">Calculating…</span>
+                    </div>
+                  </div>
+                  <div class="bm-download-file-row">
+                    <span class="bm-dl-file-label">File:</span>
+                    <span class="bm-dl-file-name" id="bm3b-dl-file">bypass_files.zip</span>
+                  </div>
+                </div>
+              </div>
+              <div class="bypass-modal-actions">
+                <button class="bypass-modal-btn bm-btn-secondary bm-btn-disabled" disabled>Please wait…</button>
+              </div>
+            </div>
+
+            <!-- State C: Done -->
+            <div id="bm3b-state-done" style="display:none;">
+              <div class="bypass-modal-body">
+                <div class="bypass-modal-alert-icon bm-alert-green">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>
+                </div>
+                <div class="bypass-modal-text-block">
+                  <p class="bypass-modal-headline">Bypass injected successfully!</p>
+                  <p class="bypass-modal-desc">You can now start the game normally through Steam. Thank you for using Wong.</p>
+                </div>
+              </div>
+              <div class="bypass-modal-actions">
+                <button class="bypass-modal-btn bm-btn-primary bm-btn-green" id="bm3b-done-btn">Okay</button>
+              </div>
+            </div>
+
+            <!-- State E: Error -->
+            <div id="bm3b-state-error" style="display:none;">
+              <div class="bypass-modal-body">
+                <div class="bypass-modal-alert-icon bm-alert-red">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+                </div>
+                <div class="bypass-modal-text-block">
+                  <p class="bypass-modal-headline">Something went wrong.</p>
+                  <p class="bypass-modal-desc" id="bm3b-error-msg">The bypass could not be applied. Please try again.</p>
+                </div>
+              </div>
+              <div class="bypass-modal-actions">
+                <button class="bypass-modal-btn bm-btn-secondary" id="bm3b-error-close-btn">Close</button>
+                <button class="bypass-modal-btn bm-btn-bypass" id="bm3b-error-retry-btn">Retry</button>
+              </div>
+            </div>
+          </div>
+        </div>
 
         <!-- ════════════════════════════════════════
              SETTINGS (PROJECT LIGHTNING ARCHITECTURE)
@@ -522,6 +758,18 @@
                   <button type="button" class="btn-steamtool-util" id="restart-steam-settings-btn">Restart Steam</button>
                   <button type="button" class="btn-steamtool-util" id="open-wizard-btn">Rerun Setup Wizard</button>
                 </div>
+              </div>
+
+              <div class="setting-card full-width">
+                <div>
+                  <h3>Steam Store Integration</h3>
+                  <p>Installs a plugin into Millennium that adds a <strong>Claim</strong> button directly on Steam Store game pages. Requires <a href="https://steambrew.app" target="_blank" style="color:var(--accent);">Millennium</a> to be installed.</p>
+                </div>
+                <div style="display:flex;align-items:center;flex-wrap:wrap;gap:10px;margin-top:10px;">
+                  <span id="millennium-plugin-status-badge" class="eyebrow" style="color:#94a3b8;"><i></i>Checking...</span>
+                  <button type="button" class="btn-steamtool-util" id="install-millennium-plugin-btn">Install / Update Plugin</button>
+                </div>
+                <p style="margin-top:8px;font-size:11px;opacity:0.5;">After installing, enable it in Steam &rarr; Millennium &rarr; Plugins &rarr; wong-inject</p>
               </div>
 
               <div class="setting-card danger-zone full-width">

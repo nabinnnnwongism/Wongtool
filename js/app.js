@@ -308,13 +308,21 @@ async function addFallbackToLibrary(appId) {
 
 async function loadLibrary() {
   try {
-    let games = await invokeApi('biblioteca:getJuegos');
-    if (!games || !Array.isArray(games) || games.length === 0) {
+    // Always fetch from the HTTP server — this triggers syncSteamToolGames() which
+    // imports any Lua files added externally via SteamTool / manifest injection.
+    let games = [];
+    try {
       const res = await fetch('/api/library/games');
       if (res.ok) {
         const json = await res.json();
         games = json.games || [];
       }
+    } catch (_) {}
+
+    // IPC fallback (for future use — currently not implemented in main process)
+    if (games.length === 0) {
+      const ipcGames = await invokeApi('biblioteca:getJuegos');
+      if (Array.isArray(ipcGames) && ipcGames.length > 0) games = ipcGames;
     }
 
     if (!games || games.length === 0) {
@@ -361,7 +369,13 @@ function renderLibrary() {
   const grid = document.querySelector('#library-grid');
   const countEl = document.querySelector('#game-count');
   const featureCard = document.querySelector('#latest-game');
-  if (!grid || !libraryGames.length) return;
+  if (!grid) return;
+
+  if (!libraryGames.length) {
+    grid.innerHTML = '<p style="opacity:.4;text-align:center;padding:2rem;">No games in library yet. Add one above.</p>';
+    if (countEl) countEl.textContent = '00 GAMES';
+    return;
+  }
 
   const countStr = String(libraryGames.length).padStart(2, '0') + ' GAMES';
   if (countEl) countEl.textContent = countStr;
@@ -848,6 +862,265 @@ async function applyBypassFix() {
   }
 }
 
+/* ── BYPASS BUTTON — Steam-style check flow ── */
+
+// Track the detected install folder per-session for the BYPASS button
+let bypassCheckFolderPath = null;
+
+function closeAllBypassModals() {
+  document.querySelectorAll('.bypass-modal-overlay.active').forEach(m => m.classList.remove('active'));
+}
+
+function openBypassModal(id) {
+  closeAllBypassModals();
+  const el = document.querySelector('#' + id);
+  if (el) el.classList.add('active');
+}
+
+function fillBypassModalGameInfo(version, game) {
+  const appid = game.appid || game.steam_id || game.id || '';
+  const name  = game.name || game.nombre || `App ${appid}`;
+  const icon  = `https://cdn.cloudflare.steamstatic.com/steam/apps/${appid}/capsule_231x87.jpg`;
+
+  const iconEl = document.querySelector(`#bm${version}-icon`);
+  const nameEl = document.querySelector(`#bm${version}-game-name`);
+  if (iconEl) { iconEl.src = icon; iconEl.onerror = () => { iconEl.src = ''; }; }
+  if (nameEl) nameEl.textContent = name;
+}
+
+function renderDrmChips(listId, drmNames) {
+  const el = document.querySelector('#' + listId);
+  if (!el) return;
+  el.innerHTML = drmNames.map(n => `
+    <span class="bm-drm-chip">
+      <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      ${n}
+    </span>
+  `).join('');
+}
+
+async function handleBypassBtnClick() {
+  if (!selectedBypassGame) {
+    showToast('No game selected.');
+    return;
+  }
+
+  const bypassBtn  = document.querySelector('#bd-steam-bypass-btn');
+  const bypassLabel = document.querySelector('#bd-steam-bypass-label');
+
+  // Set checking state
+  if (bypassBtn)  bypassBtn.classList.add('checking');
+  if (bypassLabel) bypassLabel.textContent = 'Checking…';
+
+  const appid = selectedBypassGame.appid || selectedBypassGame.steam_id || selectedBypassGame.id || '';
+  const name  = selectedBypassGame.name || selectedBypassGame.nombre || '';
+
+  try {
+    // ── CHECK 1: Does the game have DRM? (Steam API) ──
+    const drmRes = await fetch(`/api/bypass/drm-check?appid=${encodeURIComponent(appid)}`)
+      .then(r => r.json())
+      .catch(() => ({ ok: false, hasDrm: false, drmNames: [] }));
+
+    const hasDrm   = drmRes.ok && drmRes.hasDrm;
+    const drmNames = drmRes.drmNames || [];
+
+    // ── CHECK 2: Does our bypass DB have this game? ──
+    const data = await loadBypassData();
+    let hasBypass = false;
+    if (data) {
+      for (const games of Object.values(data)) {
+        if (games[appid]) { hasBypass = true; break; }
+      }
+    }
+
+    // ── CHECK 3: Is the game installed? ──
+    let gameInstalled = false;
+    let installedPath = null;
+    if (hasDrm && hasBypass) {
+      const folderRes = await fetch(
+        `/api/system/detect-game-folder?name=${encodeURIComponent(name)}&appid=${encodeURIComponent(appid)}`
+      ).then(r => r.json()).catch(() => ({ ok: false, found: false }));
+      gameInstalled = folderRes.ok && folderRes.found;
+      installedPath = folderRes.path || null;
+    }
+
+    // ── ROUTE TO CORRECT NOTIFICATION VERSION ──
+
+    if (!hasDrm) {
+      // V2: No DRM — safe to play
+      fillBypassModalGameInfo('2', selectedBypassGame);
+      openBypassModal('bypass-modal-v2');
+
+    } else if (!hasBypass) {
+      // V1: Has DRM but no bypass in app
+      fillBypassModalGameInfo('1', selectedBypassGame);
+      renderDrmChips('bm1-drm-list', drmNames.length ? drmNames : ['Unknown DRM']);
+      openBypassModal('bypass-modal-v1');
+
+    } else if (!gameInstalled) {
+      // V3a: Has DRM + bypass available but game not installed yet
+      fillBypassModalGameInfo('3a', selectedBypassGame);
+      renderDrmChips('bm3a-drm-list', drmNames.length ? drmNames : ['Unknown DRM']);
+      openBypassModal('bypass-modal-v3a');
+
+    } else {
+      // V3b: Has DRM + bypass + game installed → confirm folder → download
+      bypassCheckFolderPath = installedPath;
+      fillBypassModalGameInfo('3b', selectedBypassGame);
+      const folderPathEl = document.querySelector('#bm3b-folder-path');
+      if (folderPathEl) folderPathEl.textContent = installedPath;
+
+      // Reset to confirm state
+      document.querySelector('#bm3b-state-confirm').style.display = '';
+      document.querySelector('#bm3b-state-downloading').style.display = 'none';
+      document.querySelector('#bm3b-state-done').style.display = 'none';
+      document.querySelector('#bm3b-state-error').style.display = 'none';
+
+      openBypassModal('bypass-modal-v3b');
+    }
+
+  } catch (err) {
+    showToast('Bypass check error: ' + err.message);
+  } finally {
+    if (bypassBtn)  bypassBtn.classList.remove('checking');
+    if (bypassLabel) bypassLabel.textContent = 'BYPASS';
+  }
+}
+
+async function startBypassDownloadWithProgress(targetDir) {
+  // Switch to download state
+  document.querySelector('#bm3b-state-confirm').style.display = 'none';
+  document.querySelector('#bm3b-state-downloading').style.display = '';
+  document.querySelector('#bm3b-state-done').style.display = 'none';
+  document.querySelector('#bm3b-state-error').style.display = 'none';
+
+  const fillEl  = document.querySelector('#bm3b-progress-fill');
+  const pctEl   = document.querySelector('#bm3b-dl-pct');
+  const etaEl   = document.querySelector('#bm3b-dl-eta');
+  const speedEl = document.querySelector('#bm3b-speed');
+  const fileEl  = document.querySelector('#bm3b-dl-file');
+
+  let percent = 0;
+  let startTime = Date.now();
+  let lastPct = 0;
+
+  // Simulate live speed-based progress updates while the real download runs
+  const progressInterval = setInterval(() => {
+    const elapsed = (Date.now() - startTime) / 1000; // seconds
+    const increment = Math.random() * 3.5 + 0.5;
+    percent = Math.min(percent + increment, 88);
+
+    const pctDelta  = percent - lastPct;
+    const timeDelta = elapsed > 0 ? elapsed : 1;
+    const speedMBps = ((pctDelta / 100) * 80 / timeDelta).toFixed(1); // Rough estimate
+    const remaining = percent < 100
+      ? Math.max(0, Math.round(((100 - percent) / 100 * 80) / Math.max(Number(speedMBps), 0.1)))
+      : 0;
+
+    if (fillEl)  fillEl.style.width  = percent.toFixed(1) + '%';
+    if (pctEl)   pctEl.textContent   = Math.round(percent) + '%';
+    if (speedEl) speedEl.textContent = `${speedMBps} MB/s`;
+    if (etaEl)   etaEl.textContent   = remaining > 60
+      ? `about ${Math.round(remaining / 60)} min remaining`
+      : remaining > 0
+        ? `about ${remaining} sec remaining`
+        : 'finishing…';
+  }, 500);
+
+  try {
+    const appid = selectedBypassGame.appid || selectedBypassGame.id || '';
+    if (fileEl) fileEl.textContent = `bypass_${appid}.zip`;
+
+    const res = await fetch('/api/fixes/apply', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ appid, destinationDir: targetDir })
+    }).then(r => r.json()).catch(err => ({ ok: false, error: err.message }));
+
+    clearInterval(progressInterval);
+
+    if (res?.ok) {
+      // Fill to 100%
+      if (fillEl)  fillEl.style.width  = '100%';
+      if (pctEl)   pctEl.textContent   = '100%';
+      if (etaEl)   etaEl.textContent   = 'Complete';
+      if (speedEl) speedEl.textContent  = '—';
+
+      setTimeout(() => {
+        document.querySelector('#bm3b-state-downloading').style.display = 'none';
+        document.querySelector('#bm3b-state-done').style.display = '';
+      }, 600);
+    } else {
+      clearInterval(progressInterval);
+      const errMsg = res?.error || res?.message || 'Unknown error.';
+      const errMsgEl = document.querySelector('#bm3b-error-msg');
+      if (errMsgEl) errMsgEl.textContent = errMsg;
+      document.querySelector('#bm3b-state-downloading').style.display = 'none';
+      document.querySelector('#bm3b-state-error').style.display = '';
+    }
+  } catch (err) {
+    clearInterval(progressInterval);
+    const errMsgEl = document.querySelector('#bm3b-error-msg');
+    if (errMsgEl) errMsgEl.textContent = err.message;
+    document.querySelector('#bm3b-state-downloading').style.display = 'none';
+    document.querySelector('#bm3b-state-error').style.display = '';
+  }
+}
+
+function initBypassModalEvents() {
+  // V1: Okay
+  document.querySelector('#bm1-ok-btn')?.addEventListener('click', closeAllBypassModals);
+
+  // V2: Okay
+  document.querySelector('#bm2-ok-btn')?.addEventListener('click', closeAllBypassModals);
+
+  // V3a: Got it
+  document.querySelector('#bm3a-ok-btn')?.addEventListener('click', closeAllBypassModals);
+
+  // V3b: Cancel
+  document.querySelector('#bm3b-cancel-btn')?.addEventListener('click', closeAllBypassModals);
+
+  // V3b: Bypass → start download
+  document.querySelector('#bm3b-bypass-btn')?.addEventListener('click', () => {
+    const targetDir = bypassCheckFolderPath
+      || document.querySelector('#bd-install-path')?.value.trim()
+      || '';
+    if (!targetDir) {
+      closeAllBypassModals();
+      showToast('Could not determine install folder. Use the Manual option.');
+      return;
+    }
+    startBypassDownloadWithProgress(targetDir);
+  });
+
+  // V3b: Done → close
+  document.querySelector('#bm3b-done-btn')?.addEventListener('click', () => {
+    closeAllBypassModals();
+    showToast(`Bypass applied! You can now launch ${selectedBypassGame?.name || 'the game'} normally.`);
+  });
+
+  // V3b: Error → close
+  document.querySelector('#bm3b-error-close-btn')?.addEventListener('click', closeAllBypassModals);
+
+  // V3b: Error → retry
+  document.querySelector('#bm3b-error-retry-btn')?.addEventListener('click', () => {
+    const targetDir = bypassCheckFolderPath || '';
+    if (targetDir) {
+      startBypassDownloadWithProgress(targetDir);
+    } else {
+      closeAllBypassModals();
+    }
+  });
+
+  // Close on backdrop click (clicking the dark overlay outside the card)
+  document.querySelectorAll('.bypass-modal-overlay').forEach(overlay => {
+    overlay.addEventListener('click', e => {
+      if (e.target === overlay) closeAllBypassModals();
+    });
+  });
+}
+
+
 /* ── STEAMDB NAVIGATOR ── */
 async function searchSteam(query) {
   const term = query.trim();
@@ -1142,7 +1415,11 @@ function initEvents() {
   document.addEventListener('click', e => {
     const nav = e.target.closest('[data-route]');
     if (nav) {
-      route(nav.dataset.route);
+      const target = nav.dataset.route;
+      route(target);
+      // Refresh library from server every time the user navigates to it
+      // so newly injected SteamTool games appear immediately
+      if (target === 'library') loadLibrary();
     }
     const card = e.target.closest('.card[data-game-id]');
     if (card) {
@@ -1204,6 +1481,62 @@ function initEvents() {
     });
   }
 
+  // Sync Library button — manually scan all Lua files and import into DB
+  const syncLibraryBtn = document.querySelector('#sync-library-btn');
+  if (syncLibraryBtn) {
+    syncLibraryBtn.addEventListener('click', async () => {
+      const originalHtml = syncLibraryBtn.innerHTML;
+      syncLibraryBtn.innerHTML = '<i data-lucide="loader" size="13"></i> Syncing…';
+      syncLibraryBtn.disabled = true;
+      try {
+        const res = await fetch('/api/library/sync', { method: 'POST' });
+        const json = await res.json();
+        if (json.ok) {
+          libraryGames = json.games || libraryGames;
+          renderLibrary();
+          showToast(`Library synced — ${json.count} games tracked.`);
+        } else {
+          showToast('Sync failed: ' + (json.error || 'unknown error'));
+        }
+      } catch (err) {
+        showToast('Sync error: ' + err.message);
+      } finally {
+        syncLibraryBtn.innerHTML = originalHtml;
+        syncLibraryBtn.disabled = false;
+        refreshIcons();
+      }
+    });
+  }
+
+  // Library search — live filter cards by game name
+  const librarySearchInput = document.querySelector('#library-search-input');
+  const librarySearchForm = document.querySelector('#library-search');
+  if (librarySearchInput) {
+    librarySearchInput.addEventListener('input', () => {
+      const query = librarySearchInput.value.trim().toLowerCase();
+      const grid = document.querySelector('#library-grid');
+      const featureCard = document.querySelector('#latest-game');
+      if (!grid) return;
+      if (!query) {
+        renderLibrary();
+        return;
+      }
+      // Filter visible cards — don't mutate libraryGames, just hide/show DOM nodes
+      const cards = grid.querySelectorAll('article.card[data-game-id]');
+      cards.forEach(card => {
+        const title = (card.querySelector('h3')?.textContent || '').toLowerCase();
+        card.style.display = title.includes(query) ? '' : 'none';
+      });
+      if (featureCard) {
+        const featTitle = (featureCard.querySelector('h3')?.textContent || '').toLowerCase();
+        featureCard.style.display = featTitle.includes(query) ? '' : 'none';
+      }
+    });
+    if (librarySearchForm) {
+      librarySearchForm.addEventListener('submit', e => e.preventDefault());
+    }
+  }
+
   // Drag and drop zone for manifests/lua
   const dropzone = document.querySelector('#steamtool-dropzone');
   if (dropzone) {
@@ -1233,6 +1566,15 @@ function initEvents() {
   if (applyBtn) {
     applyBtn.addEventListener('click', applyBypassFix);
   }
+
+  // Steam-style BYPASS Button
+  const steamBypassBtn = document.querySelector('#bd-steam-bypass-btn');
+  if (steamBypassBtn) {
+    steamBypassBtn.addEventListener('click', handleBypassBtnClick);
+  }
+
+  // Initialize all bypass modal button events
+  initBypassModalEvents();
 
   // Bypass Detect & Manual Folder Buttons
   const detectBtn = document.querySelector('#bd-detect-btn');
@@ -1406,6 +1748,54 @@ function initEvents() {
   document.querySelector('#restart-steam-settings-btn')?.addEventListener('click', async () => {
     showToast('Restarting Steam...');
     await fetch('/api/system/restart-steam').catch(() => {});
+  });
+
+  // Millennium Plugin — check status on load
+  async function checkMillenniumPluginStatus() {
+    const badge = document.querySelector('#millennium-plugin-status-badge');
+    if (!badge) return;
+    const steamPath = document.querySelector('#settings-steam-path')?.value.trim() || '';
+    try {
+      const res = await fetch(`/api/steamtools/millennium-plugin-status?steamPath=${encodeURIComponent(steamPath)}`).then(r => r.json());
+      if (res?.installed) {
+        badge.style.color = '#22c55e';
+        badge.innerHTML   = '<i></i>Plugin Installed';
+      } else {
+        badge.style.color = '#f59e0b';
+        badge.innerHTML   = '<i></i>Plugin Not Installed';
+      }
+    } catch (_) {
+      badge.style.color = '#94a3b8';
+      badge.innerHTML   = '<i></i>Unknown Status';
+    }
+  }
+  checkMillenniumPluginStatus();
+
+  // Millennium Plugin — install / update button
+  document.querySelector('#install-millennium-plugin-btn')?.addEventListener('click', async () => {
+    const btn       = document.querySelector('#install-millennium-plugin-btn');
+    const steamPath = document.querySelector('#settings-steam-path')?.value.trim() || '';
+    if (btn) btn.disabled = true;
+    showToast('Installing Wong plugin into Millennium...');
+
+    try {
+      const res = await fetch('/api/steamtools/install-millennium-plugin', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ steamPath }),
+      }).then(r => r.json());
+
+      if (res?.ok) {
+        showToast('Plugin installed. Enable it in Steam → Millennium → Plugins → wong-inject');
+        await checkMillenniumPluginStatus();
+      } else {
+        showToast('Install failed: ' + (res?.error || 'Unknown error'));
+      }
+    } catch (e) {
+      showToast('Error: ' + e.message);
+    } finally {
+      if (btn) btn.disabled = false;
+    }
   });
 
   // Settings Clear Manifests (Danger Zone)
